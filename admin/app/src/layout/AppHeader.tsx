@@ -92,7 +92,7 @@ const AppHeader: React.FC = () => {
               alt="SuperJane Logo"
               className="rounded-lg"
             />
-            <p className="text-blue-700 font-bold text-2xl">POS 2024</p>
+            <p className="text-blue-700 font-bold text-2xl">Restaurant POS</p>
             </div>
             <div className="hidden dark:flex flex-row space-x-2"><Image
               height={32}
@@ -101,7 +101,7 @@ const AppHeader: React.FC = () => {
               className="rounded-lg"
             />
               <p className="text-blue-600 font-bold text-2xl">
-                POS 2024
+              Restaurant POS
                 </p>
             </div>
             

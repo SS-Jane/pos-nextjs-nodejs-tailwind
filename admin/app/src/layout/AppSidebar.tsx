@@ -34,6 +34,11 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
   {
+    icon: <TableIcon/>,
+    name: "Categories of food",
+    path: "/categories",
+  },
+  {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/calendar",
@@ -319,7 +324,7 @@ const AppSidebar: React.FC = () => {
              
                 height={40}
               />
-              <p className="text-blue-600 font-bold text-2xl">POS 2024</p></div>
+              <p className="text-blue-600 font-bold text-2xl">Restaurant POS</p></div>
              <div className="hidden dark:flex flex-row items-center space-x-2"><Image
                 className="rounded-lg"
                 src={SuperJaneLogo}
@@ -327,7 +332,7 @@ const AppSidebar: React.FC = () => {
               
                 height={40}
               />
-               <p className="text-blue-600 font-bold text-2xl">POS 2024</p></div>
+               <p className="text-blue-600 font-bold text-2xl">Restaurant POS</p></div>
               
             </>
           ) : (
