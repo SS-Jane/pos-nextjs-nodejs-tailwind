@@ -36,4 +36,36 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
+  remove: async (req, res) => {
+    try {
+      await prisma.foodCategories.update({
+        data: {
+          status: "delete",
+        },
+        where: {
+          id: parseInt(req.params.id),
+        },
+      });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  update: async (req, res) => {
+    try {
+      await prisma.foodCategories.update({
+        data: {
+          name: req.body.categoriesName,
+          remark: req.body.categoriesRemark || "",
+        },
+        where: {
+          id: req.body.id,
+        },
+      });
+
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
 };
