@@ -35,8 +35,19 @@ model FoodType {
 }
 
 model FoodCategories {
-  id     Int     @id() @default(autoincrement())
-  name   String
-  remark String?
-  status String  @default("use")
+  id       Int        @id() @default(autoincrement())
+  name     String
+  remark   String?
+  status   String     @default("use")
+  FoodSize FoodSize[]
+}
+
+model FoodSize {
+  id             Int            @id() @default(autoincrement())
+  name           String
+  remark         String?
+  foodCategoryId Int
+  moneyAdded     Int
+  status         String         @default("use")
+  FoodCategories FoodCategories @relation(fields: [foodCategoryId], references: [id])
 }

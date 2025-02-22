@@ -14,7 +14,7 @@ import Alert from "../ui/alert/Alert";
 export default function AddList() {
   const { isOpen, openModal, closeModal } = useModal();
   const [categoriesName, setCategoriesName] = useState("");
-  const [categoriesRemark, setCategoriesRemake] = useState("");
+  const [categoriesRemark, setCategoriesRemark] = useState("");
   const [alert, setAlert] = useState({
     show: false,
     variant: "info" as "warning" | "error" | "success" | "info",
@@ -93,7 +93,7 @@ export default function AddList() {
                   <Input
                     type="text"
                     placeholder="Food categories name"
-                    defaultValue={categoriesName}
+                    value={categoriesName}
                     onChange={(e) => setCategoriesName(e.target.value)}
                   />
                 </div>
@@ -102,8 +102,8 @@ export default function AddList() {
                   <Label>Remark</Label>
                   <Input
                     type="text"
-                    defaultValue={categoriesRemark}
-                    onChange={(e) => setCategoriesRemake(e.target.value)}
+                    value={categoriesRemark}
+                    onChange={(e) => setCategoriesRemark(e.target.value)}
                   />
                 </div>
               </div>

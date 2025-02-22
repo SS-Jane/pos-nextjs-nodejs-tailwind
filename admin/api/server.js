@@ -16,6 +16,12 @@ app.post("/api/foodCategories/create", (req, res) =>
 app.get("/api/foodCategories/list", (req, res) =>
   FoodCategoriesController.list(req, res)
 );
+app.delete("/api/foodCategories/remove/:id", (req, res) =>
+  FoodCategoriesController.remove(req, res)
+);
+app.put("/api/foodCategories/update", (req, res) =>
+  FoodCategoriesController.update(req, res)
+);
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
