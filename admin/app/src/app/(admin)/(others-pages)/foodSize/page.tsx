@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import AddList from "@/components/foodSize/AddList";
+import FoodSizeTableList from "@/components/foodSize/FoodSizeTableList";
 
 export const metadata: Metadata = {
   title: "Size of food | TailAdmin - Next.js Dashboard Template",
@@ -9,12 +9,13 @@ export const metadata: Metadata = {
 };
 
 export default function page() {
-
   return (
     <div>
-      <PageBreadcrumb pageTitle="Size of food" />
-      <div className="p-2 rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <AddList />
+      <PageBreadcrumb pageTitle="Categories of food" />
+
+      
+      <div>
+        <FoodSizeTableList />
       </div>
     </div>
   );

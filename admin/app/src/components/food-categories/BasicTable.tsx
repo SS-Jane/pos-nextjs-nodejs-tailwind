@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {  useState } from "react";
 import {
   Table,
   TableBody,
@@ -17,48 +17,21 @@ import Button from "../ui/button/Button";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { useModal } from "@/hooks/useModal";
+import { FoodCategory } from "./CategoriesTableList";
 
-interface FoodCategory {
-  id: number;
-  name: string;
-  remark: string;
+interface BasicTableProps {
+  foodCategories: FoodCategory[];
+  fetchData: () => Promise<void>;
 }
 
-export default function BasicTable() {
-  const [foodCategories, setFoodCategories] = useState<FoodCategory>([]);
-  const [loading, setLoading] = useState(true);
+export default function BasicTable({
+  foodCategories,
+  fetchData,
+}: BasicTableProps) {
   const [id, setId] = useState(0);
   const [categoriesName, setCategoriesName] = useState("");
   const [categoriesRemark, setCategoriesRemark] = useState("");
-  const [foodCategoriesId, setFoodCategoriesId] = useState(0);
   const { isOpen, openModal, closeModal } = useModal();
-
-  const fetchData = async () => {
-    try {
-      const res = await axios.get(
-        `${config.apiServer}/api/foodCategories/list`
-      );
-
-      setFoodCategories(res.data.result);
-      setFoodCategoriesId(res.data.result[0].id)
-    } catch (error) {
-      Swal.fire({
-        title: "Error!",
-        text: error.message,
-        icon: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   const handleRemove = async (item: any) => {
     try {
@@ -74,8 +47,16 @@ export default function BasicTable() {
         await axios.delete(
           `${config.apiServer}/api/foodCategories/remove/${item.id}`
         );
+        Swal.fire({
+          target: document.querySelector(".modal-container"),
+          title: "Remove Food Categories",
+          text: `Remove Food Categories ${item.name} success`,
+          icon: "success",
+        });
       }
-      fetchData();
+      setTimeout(() => {
+        fetchData();
+      }, 2000);
     } catch (e: any) {
       Swal.fire({
         title: "Error!",
@@ -99,10 +80,16 @@ export default function BasicTable() {
           payload
         );
         Swal.fire({
+          target: document.querySelector(".modal-container"),
           title: "Add Food Categories",
           text: `Add Food Categories ${categoriesName} success`,
           icon: "success",
         });
+
+        setTimeout(() => {
+          closeModal();
+          fetchData();
+        }, 2000);
       } else {
         await axios.put(
           `${config.apiServer}/api/foodCategories/update`,
@@ -110,12 +97,17 @@ export default function BasicTable() {
         );
         setId(0);
         Swal.fire({
+          target: document.querySelector(".modal-container"),
           title: "Edit Food Categories",
           text: `Add Food Categories ${categoriesName} and ${categoriesRemark} success`,
           icon: "success",
         });
       }
-    } catch (error: unknown) {
+      setTimeout(() => {
+        closeModal();
+        fetchData();
+      }, 2000);
+    } catch (error: any) {
       Swal.fire({
         title: "Error!",
         text: error.message,
@@ -181,7 +173,7 @@ export default function BasicTable() {
                   <TableCell className="px-1 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
                     <button
                       className="p-1 bg-blue-700 text-white flex items-center justify-center rounded-2xl"
-                      onClick={(e) => {
+                      onClick={(category) => {
                         edit(category);
                         openModal();
                       }}
@@ -190,7 +182,7 @@ export default function BasicTable() {
                     </button>
                     <button
                       className="p-1 flex items-center justify-center bg-red-700 text-white rounded-2xl"
-                      onClick={(e) => handleRemove(category)}
+                      onClick={(category) => handleRemove(category)}
                     >
                       <TrashBinIcon height="20px" width="20px" />
                     </button>
@@ -201,14 +193,24 @@ export default function BasicTable() {
           </Table>
         </div>
       </div>
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="modal-container max-w-[700px] m-4"
+      >
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Add Food categories list
+            {id === 0 ? 'Add Food size' : 'Edit Food Size'}
             </h4>
           </div>
-          <form className="flex flex-col">
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="px-2 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
@@ -235,7 +237,7 @@ export default function BasicTable() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" type="submit">
                 Save
               </Button>
             </div>

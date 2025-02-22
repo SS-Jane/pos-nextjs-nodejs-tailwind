@@ -8,22 +8,29 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import axios from "axios";
 import config from "@/config";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import Select from "../form/Select";
 import Alert from "../ui/alert/Alert";
+import { FoodCategory } from "./FoodSizeTableList";
 
-export default function AddList() {
+interface AddListProps {
+  foodCategories: FoodCategory[];
+  fetchDataFoodCategories: () => Promise<void>;
+  fetchDataFoodSizes: () => Promise<void>;
+}
+
+export default function AddList({ foodCategories,fetchDataFoodSizes }: AddListProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
   const [foodSizeName, setFoodSizeName] = useState("");
   const [foodSizeRemark, setFoodSizeRemark] = useState("");
-  const [foodSizes, setFoodSizes] = useState([]);
-
-  const [foodCategories, setFoodCategories] = useState([]);
-  const [foodCategoriesId, setFoodCategoriesId] = useState<number | null>(null);
 
   const [moneyAdd, setMoneyAdd] = useState<number | null>(null);
+
+  const [foodCategoryId, setFoodCategoryId] = useState<number | null>(
+    foodCategories[0]?.id || null
+  );
 
   const [alert, setAlert] = useState({
     show: false,
@@ -33,7 +40,7 @@ export default function AddList() {
   });
 
   const validateForm = (): boolean => {
-    if (!foodCategoriesId) {
+    if (!foodCategoryId) {
       setAlert({
         show: true,
         variant: "warning",
@@ -79,12 +86,11 @@ export default function AddList() {
       const payload = {
         foodSizeName: foodSizeName,
         foodSizeRemark: foodSizeRemark,
-        id: id,
-        foodCategoriesId: foodCategoriesId,
+        foodCategoryId: foodCategoryId,
         moneyAdd: moneyAdd,
       };
 
-      await axios.post(`${config.apiServer}/api/FoodSize/create`, payload);
+      await axios.post(`${config.apiServer}/api/foodSizes/create`, payload);
 
       Swal.fire({
         target: document.querySelector(".modal-container"),
@@ -93,8 +99,11 @@ export default function AddList() {
         icon: "success",
       });
 
-      fetchData();
-      closeModal();
+      setTimeout(() => {
+        closeModal();
+        clearForm();
+        fetchDataFoodSizes();
+      }, 2000);
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
@@ -105,28 +114,12 @@ export default function AddList() {
     }
   };
 
-  useEffect(() => {
-    fetchData();
-    fetchDataFoodCategories();
-  }, []);
-
-  const fetchData = async () => {};
-
-  const fetchDataFoodCategories = async () => {
-    try {
-      const res = await axios.get(
-        `${config.apiServer}/api/foodCategories/list`
-      );
-      setFoodCategories(res.data.result);
-      setFoodCategoriesId(res.data.result[0].id);
-    } catch (error: any) {
-      Swal.fire({
-        title: "Error message",
-        text: error.message,
-        icon: "error",
-      });
-    }
-  };
+  const clearForm = () => {
+    setFoodSizeName("");
+    setFoodSizeRemark("");
+    setMoneyAdd(null);
+    setFoodCategoryId(foodCategories[0]?.id || null);
+  }
 
   return (
     <div>
@@ -167,7 +160,7 @@ export default function AddList() {
                       label: item.name,
                     }))}
                     placeholder="Select food categories"
-                    onChange={(e) => setFoodCategoriesId(parseInt(e))}
+                    onChange={(e) => setFoodCategoryId(parseInt(e))}
                     className="dark:bg-dark-900"
                   />
                 </div>

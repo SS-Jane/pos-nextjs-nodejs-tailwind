@@ -1,6 +1,7 @@
 const express = require("express");
 const UserController = require("./controller/UserController");
 const FoodCategoriesController = require("./controller/FoodCategoriesController");
+const FoodSizeController = require("./controller/foodSizeController");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const app = express();
@@ -21,6 +22,17 @@ app.delete("/api/foodCategories/remove/:id", (req, res) =>
 );
 app.put("/api/foodCategories/update", (req, res) =>
   FoodCategoriesController.update(req, res)
+);
+
+app.post("/api/foodSizes/create", (req, res) =>
+  FoodSizeController.create(req, res)
+);
+app.get("/api/foodSizes/list", (req, res) => FoodSizeController.list(req, res));
+app.delete("/api/foodSizes/remove/:id", (req, res) =>
+  FoodSizeController.remove(req, res)
+);
+app.put("/api/foodSizes/update", (req, res) =>
+  FoodSizeController.update(req, res)
 );
 
 app.listen(3001, () => {
