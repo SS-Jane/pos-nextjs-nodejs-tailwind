@@ -14,16 +14,29 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  fname      String  
-  lname      String
-  username   String   @unique
-  password   String
-  email      String   @unique
-  phone      String
-  level      String   @default("admin")
-  status     String   @default("use")
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @default(now()) @updatedAt
+  id        Int      @id @default(autoincrement())
+  fname     String
+  lname     String
+  username  String   @unique
+  password  String
+  email     String   @unique
+  phone     String
+  level     String   @default("admin")
+  status    String   @default("use")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
+model FoodType {
+  id     Int     @id() @default(autoincrement())
+  name   String
+  remark String?
+  status String  @default("use")
+}
+
+model FoodCategories {
+  id     Int     @id() @default(autoincrement())
+  name   String
+  remark String?
+  status String  @default("use")
+}

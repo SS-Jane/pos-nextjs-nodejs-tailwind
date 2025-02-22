@@ -1,4 +1,5 @@
 "use client";
+
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -6,17 +7,21 @@ import Button from "@/components/ui/button/Button";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
-import axios from 'axios'
+import axios from "axios";
 import Alert from "../ui/alert/Alert";
-import config from '@/config'
+import config from "@/config";
 import { useRouter } from "next/navigation";
 
 export default function SignInForm() {
-
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [alert, setAlert] = useState({ show : false, variant: 'info' as "warning" | "error" | "success" | "info" , title : '', message : ''})
-  const router = useRouter()
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [alert, setAlert] = useState({
+    show: false,
+    variant: "info" as "warning" | "error" | "success" | "info",
+    title: "",
+    message: "",
+  });
+  const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
@@ -24,60 +29,65 @@ export default function SignInForm() {
   const signIn = async () => {
     try {
       const payload = {
-        username : username,
-        password : password,
-       }
+        username: username,
+        password: password,
+      };
 
-       if (!username || !password) {
+      if (!username || !password) {
         setAlert({
           show: true,
-          variant: 'warning',
-          title: 'Input Required',
-          message: 'Please provide both username and password.',
+          variant: "warning",
+          title: "Input Required",
+          message: "Please provide both username and password.",
         });
         return;
       }
 
-       const res = await axios.post(`${config.apiServer}/api/user/signIn`,payload)
+      const res = await axios.post(
+        `${config.apiServer}/api/user/signIn`,
+        payload
+      );
 
-       if(res.data.token !== undefined){
-          localStorage.setItem(config.token, res.data.token)
-          localStorage.setItem('posName', res.data.name)
-          localStorage.setItem('posUserId', res.data.id)
-          localStorage.setItem('posUserLevel', res.data.level)
-          localStorage.setItem('posUserName', res.data.username)
-          localStorage.setItem('posEmail', res.data.email)
-          localStorage.setItem('posFName', res.data.fname)
-          localStorage.setItem('posLName', res.data.lname)
-          localStorage.setItem('posPhone', res.data.phone)
-          router.push('/')
-       } else {
-        setAlert({
-          show : true,
-          variant : 'warning',
-          title : 'Please check email or password',
-          message : 'Email or password invalid'
-        })
-       }
-    } catch (error : unknown) {
-      if (error instanceof Error) {
-        const customMessage = error.message.includes('401') ? "invalid username or password" : error.message;
+      if (res.data.token !== undefined) {
+        localStorage.setItem(config.token, res.data.token);
+        localStorage.setItem("posName", res.data.name);
+        localStorage.setItem("posUserId", res.data.id);
+        localStorage.setItem("posUserLevel", res.data.level);
+        localStorage.setItem("posUserName", res.data.username);
+        localStorage.setItem("posEmail", res.data.email);
+        localStorage.setItem("posFName", res.data.fname);
+        localStorage.setItem("posLName", res.data.lname);
+        localStorage.setItem("posPhone", res.data.phone);
+        router.push("/");
+      } else {
         setAlert({
           show: true,
-          variant: 'error',
-          title: 'Error message',
+          variant: "warning",
+          title: "Please check email or password",
+          message: "Email or password invalid",
+        });
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        const customMessage = error.message.includes("401")
+          ? "invalid username or password"
+          : error.message;
+        setAlert({
+          show: true,
+          variant: "error",
+          title: "Error message",
           message: customMessage,
         });
       } else {
         setAlert({
           show: true,
-          variant: 'error',
-          title: 'Error message',
-          message: 'An unknown error occurred'
+          variant: "error",
+          title: "Error message",
+          message: "An unknown error occurred",
         });
       }
     }
-  }
+  };
 
   return (
     <div className="flex flex-col flex-1 p-6 rounded-2xl sm:rounded-none sm:border-0 sm:p-8">
@@ -153,17 +163,24 @@ export default function SignInForm() {
                 </span>
               </div>
             </div>
-            <div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                signIn();
+              }}
+            >
               <div className="space-y-6">
                 <div>
                   <Label>
                     Username <span className="text-error-500">*</span>{" "}
                   </Label>
-                  <Input placeholder="Username" 
-                  type="text"
-                  onChange={(e)=> setUsername(e.target.value)}
+                  <Input
+                    placeholder="Username"
+                    type="text"
+                    onChange={(e) => setUsername(e.target.value)}
+                    value={username}
                   />
-
+                 
                 </div>
                 <div>
                   <Label>
@@ -173,8 +190,11 @@ export default function SignInForm() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      onChange={(e)=> setPassword(e.target.value)}
+                      onChange={(e) => setPassword(e.target.value)}
+                      value={password}
                     />
+                    
+
                     <span
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
@@ -202,12 +222,12 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm" onClick={signIn}>
+                  <Button className="w-full" size="sm" type="submit">
                     Sign in
                   </Button>
                 </div>
               </div>
-            </div>
+            </form>
 
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
@@ -221,13 +241,13 @@ export default function SignInForm() {
               </p>
             </div>
             <div className="mt-5">
-            {alert.show && (
-              <Alert
-               variant={alert.variant}
-                title={alert.title}
-                message={alert.message}
-              />
-            )}
+              {alert.show && (
+                <Alert
+                  variant={alert.variant}
+                  title={alert.title}
+                  message={alert.message}
+                />
+              )}
             </div>
           </div>
         </div>
