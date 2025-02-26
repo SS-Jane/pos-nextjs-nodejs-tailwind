@@ -4,6 +4,7 @@ const FoodCategoriesController = require("./controller/FoodCategoriesController"
 const FoodSizeController = require("./controller/foodSizeController");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const FoodTastesController = require("./controller/FoodTastesController");
 const app = express();
 
 app.use(bodyParser.json());
@@ -33,6 +34,19 @@ app.delete("/api/foodSizes/remove/:id", (req, res) =>
 );
 app.put("/api/foodSizes/update", (req, res) =>
   FoodSizeController.update(req, res)
+);
+
+app.get("/api/foodTastes/list", (req, res) =>
+  FoodTastesController.list(req, res)
+);
+app.post("/api/foodTastes/create", (req, res) =>
+  FoodTastesController.create(req, res)
+);
+app.delete("/api/foodTastes/remove/:id", (req, res) =>
+  FoodTastesController.remove(req, res)
+);
+app.put("/api/foodTastes/update", (req, res) =>
+  FoodTastesController.update(req, res)
 );
 
 app.listen(3001, () => {

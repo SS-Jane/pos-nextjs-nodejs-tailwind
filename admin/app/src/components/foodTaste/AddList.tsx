@@ -12,24 +12,22 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import Select from "../form/Select";
 import Alert from "../ui/alert/Alert";
-import { FoodCategory } from "./FoodSizeTableList";
+import { FoodCategory } from "./FoodTasteTableList";
 
 interface AddListProps {
   foodCategories: FoodCategory[];
   fetchDataFoodCategories: () => Promise<void>;
-  fetchDataFoodSizes: () => Promise<void>;
+  fetchDataFoodTastes: () => Promise<void>;
 }
 
 export default function AddList({
   foodCategories,
-  fetchDataFoodSizes,
+  fetchDataFoodTastes,
 }: AddListProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
-  const [foodSizeName, setFoodSizeName] = useState("");
-  const [foodSizeRemark, setFoodSizeRemark] = useState("");
-
-  const [moneyAdd, setMoneyAdd] = useState<number | null>(null);
+  const [foodTasteName, setFoodTasteName] = useState("");
+  const [foodTasteRemark, setFoodTasteRemark] = useState("");
 
   const [foodCategoryId, setFoodCategoryId] = useState<number | null>(
     foodCategories[0]?.id || null
@@ -53,21 +51,12 @@ export default function AddList({
       return false;
     }
 
-    if (!foodSizeName.trim()) {
+    if (!foodTasteName.trim()) {
       setAlert({
         show: true,
         variant: "warning",
         title: "validation error",
-        message: "Food size name is required.",
-      });
-      return false;
-    }
-    if (moneyAdd === null || isNaN(moneyAdd)) {
-      setAlert({
-        show: true,
-        variant: "warning",
-        title: "Validation error",
-        message: "Please enter an amount for additional money.",
+        message: "Food taste name is required.",
       });
       return false;
     }
@@ -87,25 +76,24 @@ export default function AddList({
 
     try {
       const payload = {
-        foodSizeName: foodSizeName,
-        foodSizeRemark: foodSizeRemark,
+        foodTasteName: foodTasteName,
+        foodTasteRemark: foodTasteRemark,
         foodCategoryId: foodCategoryId,
-        moneyAdd: moneyAdd,
       };
 
-      await axios.post(`${config.apiServer}/api/foodSizes/create`, payload);
+      await axios.post(`${config.apiServer}/api/foodTastes/create`, payload);
 
       Swal.fire({
         target: document.querySelector(".modal-container"),
         title: "Add Food Size",
-        html: `Add Food Size : <span class="text-green-500">${foodSizeName}</span> success`,
+        html : `Add Food Size : <span class="text-green-500">${foodTasteName}</span> success`,
         icon: "success",
       });
 
       setTimeout(() => {
         closeModal();
         clearForm();
-        fetchDataFoodSizes();
+        fetchDataFoodTastes();
       }, 2000);
     } catch (error: any) {
       Swal.fire({
@@ -118,9 +106,8 @@ export default function AddList({
   };
 
   const clearForm = () => {
-    setFoodSizeName("");
-    setFoodSizeRemark("");
-    setMoneyAdd(null);
+    setFoodTasteName("");
+    setFoodTasteRemark("");
     setFoodCategoryId(foodCategories[0]?.id || null);
   };
 
@@ -151,7 +138,7 @@ export default function AddList({
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Add Food size list
+              Add Food Taste list
             </h4>
           </div>
           <form
@@ -176,22 +163,12 @@ export default function AddList({
                   />
                 </div>
                 <div>
-                  <Label>Food size name</Label>
+                  <Label>Food taste name</Label>
                   <Input
                     type="text"
-                    placeholder="Food size"
-                    value={foodSizeName}
-                    onChange={(e) => setFoodSizeName(e.target.value)}
-                  />
-                </div>
-
-                <div>
-                  <Label>Add more money for add size</Label>
-                  <Input
-                    type="number"
-                    placeholder="add more price"
-                    value={moneyAdd !== null ? moneyAdd : ""}
-                    onChange={(e) => setMoneyAdd(parseFloat(e.target.value))}
+                    placeholder="Food taste name"
+                    value={foodTasteName}
+                    onChange={(e) => setFoodTasteName(e.target.value)}
                   />
                 </div>
 
@@ -199,8 +176,8 @@ export default function AddList({
                   <Label>Remark</Label>
                   <Input
                     type="text"
-                    value={foodSizeRemark}
-                    onChange={(e) => setFoodSizeRemark(e.target.value)}
+                    value={foodTasteRemark}
+                    onChange={(e) => setFoodTasteRemark(e.target.value)}
                   />
                 </div>
               </div>

@@ -67,6 +67,11 @@ export default function BasicTable({
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+
     try {
       const payload = {
         id: id,

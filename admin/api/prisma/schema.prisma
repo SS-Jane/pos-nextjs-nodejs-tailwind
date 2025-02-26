@@ -57,8 +57,8 @@ model Taste {
   id     Int     @id() @default(autoincrement())
   name   String
   remark String?
-  foodCategoriesId Int
+  foodCategoryId Int
   status String  @default("use")
-  FoodCategories FoodCategories @relation(fields: [foodCategoriesId], references: [id])
+  FoodCategories FoodCategories @relation(fields: [foodCategoryId], references: [id])
 
 }

@@ -17,27 +17,26 @@ import Button from "../ui/button/Button";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import { useModal } from "@/hooks/useModal";
-import { FoodCategory, FoodSize } from "./FoodSizeTableList";
+import { FoodCategory, FoodTastes } from "./FoodTasteTableList";
 import Alert from "../ui/alert/Alert";
 
 interface BasicTableProps {
   foodCategories: FoodCategory[];
-  fetchDataFoodSizes: () => Promise<void>;
-  foodSizes: FoodSize[];
+  fetchDataFoodTastes: () => Promise<void>;
+  foodTastes: FoodTastes[];
 }
 
 export default function BasicTable({
   foodCategories,
-  fetchDataFoodSizes,
-  foodSizes,
+  fetchDataFoodTastes,
+  foodTastes,
 }: BasicTableProps) {
-  const [foodSizeId, setFoodSizeId] = useState(0);
-  const [foodSizeName, setFoodSizeName] = useState("");
-  const [foodSizeRemark, setFoodSizeRemark] = useState("");
+  const [foodTasteId, setFoodTasteId] = useState(0);
+  const [foodTasteName, setFoodTasteName] = useState("");
+  const [foodTasteRemark, setFoodTasteRemark] = useState("");
   const { isOpen, openModal, closeModal } = useModal();
   const [foodCategoriesName, setFoodCategoriesName] = useState("");
   const [foodCategoriesId, setFoodCategoriesId] = useState(0);
-  const [moneyAdd, setMoneyAdd] = useState<number | null>(null);
   const [alert, setAlert] = useState({
     show: false,
     variant: "info" as "warning" | "error" | "success" | "info",
@@ -57,21 +56,12 @@ export default function BasicTable({
       return false;
     }
 
-    if (!foodSizeName.trim()) {
+    if (!foodTasteName.trim()) {
       setAlert({
         show: true,
         variant: "warning",
         title: "validation error",
-        message: "Food size name is required.",
-      });
-      return false;
-    }
-    if (moneyAdd === null || isNaN(moneyAdd)) {
-      setAlert({
-        show: true,
-        variant: "warning",
-        title: "Validation error",
-        message: "Please enter an amount for additional money.",
+        message: "Food taste name is required.",
       });
       return false;
     }
@@ -84,7 +74,7 @@ export default function BasicTable({
     return true;
   };
 
-  const handleRemove = async (item: FoodSize) => {
+  const handleRemove = async (item: FoodTastes) => {
     try {
       const button = await Swal.fire({
         title: "Are you sure?",
@@ -96,16 +86,16 @@ export default function BasicTable({
 
       if (button.isConfirmed) {
         await axios.delete(
-          `${config.apiServer}/api/foodSizes/remove/${item.id}`
+          `${config.apiServer}/api/foodTastes/remove/${item.id}`
         );
         Swal.fire({
-          title: "Remove Food Sizes",
-          html: `Remove Food Sizes <span class="text-red-500">${item.name}</span> success`,
+          title: "Remove Food Taste",
+          html: `Remove Food Taste : <span class="text-red-500">${item.name}</span> success`,
           icon: "success",
         });
       }
       setTimeout(() => {
-        fetchDataFoodSizes();
+        fetchDataFoodTastes();
       }, 2000);
     } catch (e: any) {
       Swal.fire({
@@ -124,35 +114,33 @@ export default function BasicTable({
     try {
       const payload = {
         foodCategoriesId : foodCategoriesId,
-        foodSizeId: foodSizeId,
-        foodSizeName: foodSizeName,
-        foodSizeRemark: foodSizeRemark,
-        moneyAdd: moneyAdd,
-
+        foodTasteId: foodTasteId,
+        foodTasteName: foodTasteName,
+        foodTasteRemark: foodTasteRemark,
       };
 
-      if (foodSizeId == 0) {
-        await axios.post(`${config.apiServer}/api/foodSizes/create`, payload);
+      if (foodTasteId == 0) {
+        await axios.post(`${config.apiServer}/api/foodTastes/create`, payload);
         Swal.fire({
           target: document.querySelector(".modal-container"),
-          title: "Add Food size",
-          html: <>Food Size <span className="text-green-500">${foodSizeName}</span> added successfully.</>,
+          title: "Add Food Taste",
+          html: `Food Taste : <span class="text-green-500">${foodTasteName}</span> added successfully.`,
           icon: "success",
         });
         clearForm();
       } else {
-        await axios.put(`${config.apiServer}/api/foodSizes/update`, payload);
-        setFoodSizeId(0);
+        await axios.put(`${config.apiServer}/api/foodTastes/update`, payload);
+        setFoodTasteId(0);
         Swal.fire({
           target: document.querySelector(".modal-container"),
           title: "Edit Food Categories",
-          html: `Add Food Categories <span class="text-green-500">${foodSizeName}</span> and <span class="text-green-500">${foodSizeRemark}</span> success`,
+          html: `Add Food Categories : <span class="text-green-500">${foodTasteName} and ${foodTasteRemark}</span> success`,
           icon: "success",
         });
       }
       setTimeout(() => {
         closeModal();
-        fetchDataFoodSizes();
+        fetchDataFoodTastes();
       }, 2000);
     } catch (error: unknown) {
       Swal.fire({
@@ -164,11 +152,10 @@ export default function BasicTable({
     }
   };
 
-  const edit = (item: FoodSize) => {
-    setFoodSizeId(item.id);
-    setFoodSizeName(item.name);
-    setFoodSizeRemark(item.remark);
-    setMoneyAdd(item.moneyAdded);
+  const edit = (item: FoodTastes) => {
+    setFoodTasteId(item.id);
+    setFoodTasteName(item.name);
+    setFoodTasteRemark(item.remark);
     const category = foodCategories.find(
       (cat) => cat.id === item.foodCategoryId
     );
@@ -179,9 +166,9 @@ export default function BasicTable({
   };
 
   const clearForm = () => {
-    setFoodSizeId(0);
-    setFoodSizeName("");
-    setFoodSizeRemark("");
+    setFoodTasteId(0);
+    setFoodTasteName("");
+    setFoodTasteRemark("");
   };
 
   return (
@@ -208,13 +195,7 @@ export default function BasicTable({
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Food size name
-                </TableCell>
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                >
-                  Add more price
+                  Food taste name
                 </TableCell>
                 <TableCell
                   isHeader
@@ -233,32 +214,30 @@ export default function BasicTable({
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {foodSizes.map((foodSize) => {
+              {foodTastes.map((foodTaste) => {
                 const category = foodCategories.find(
-                  (cat) => cat.id === foodSize.foodCategoryId
+                  (cat) => cat.id === foodTaste.foodCategoryId
                 );
                 return (
-                  <TableRow key={foodSize.id}>
+                  <TableRow key={foodTaste.id}>
                     <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                      {foodSize.id}
+                      {foodTaste.id}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {category ? category.name : "-"}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {foodSize.name}
+                      {foodTaste.name}
                     </TableCell>
+                   
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {foodSize.moneyAdded}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {foodSize.remark || "-"}
+                      {foodTaste.remark || "-"}
                     </TableCell>
                     <TableCell className="px-1 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
                       <button
                         className="p-1 bg-blue-700 text-white flex items-center justify-center rounded-2xl"
-                        onClick={(item : FoodSize) => {
-                          edit(foodSize);
+                        onClick={(item : FoodTastes) => {
+                          edit(foodTaste);
                           openModal();
                         }}
                       >
@@ -266,7 +245,7 @@ export default function BasicTable({
                       </button>
                       <button
                         className="p-1 flex items-center justify-center bg-red-700 text-white rounded-2xl"
-                        onClick={(e) => handleRemove(foodSize)}
+                        onClick={(e) => handleRemove(foodTaste)}
                       >
                         <TrashBinIcon height="20px" width="20px" />
                       </button>
@@ -286,10 +265,11 @@ export default function BasicTable({
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              {foodSizeId === 0
-                ? ("Add Food size")
+              {foodTasteId === 0
+                ? ("Add Food Taste")
                 : (<>
-                `Edit Food Size : <span className="text-blue-500">{foodCategoriesName}</span>`</>)}
+                Edit Food taste : <span className="text-blue-500">{foodCategoriesName}</span>
+                </>)}
             </h4>
           </div>
           <form
@@ -302,31 +282,23 @@ export default function BasicTable({
             <div className="px-2 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Food size name</Label>
+                  <Label>Food Taste name</Label>
                   <Input
                     type="text"
-                    placeholder="Food size name"
-                    value={foodSizeName}
-                    onChange={(e) => setFoodSizeName(e.target.value)}
+                    placeholder="Food Taste name"
+                    value={foodTasteName}
+                    onChange={(e) => setFoodTasteName(e.target.value)}
                   />
                 </div>
 
-                <div>
-                  <Label>Add more money for add size</Label>
-                  <Input
-                    type="number"
-                    placeholder="add more price"
-                    value={moneyAdd !== null ? moneyAdd : ""}
-                    onChange={(e) => setMoneyAdd(parseFloat(e.target.value))}
-                  />
-                </div>
+              
 
                 <div>
                   <Label>Remark</Label>
                   <Input
                     type="text"
-                    value={foodSizeRemark}
-                    onChange={(e) => setFoodSizeRemark(e.target.value)}
+                    value={foodTasteRemark}
+                    onChange={(e) => setFoodTasteRemark(e.target.value)}
                   />
                 </div>
               </div>

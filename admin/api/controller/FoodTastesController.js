@@ -2,25 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 module.exports = {
-  create: async (req, res) => {
-    try {
-      await prisma.foodSize.create({
-        data: {
-          foodCategoryId: req.body.foodCategoryId,
-          name: req.body.foodSizeName,
-          remark: req.body.foodSizeRemark || "",
-          moneyAdded: req.body.moneyAdd,
-        },
-      });
-
-      return res.send({ message: "success" });
-    } catch (error) {
-      return res.status(500).send({ error: error.message });
-    }
-  },
   list: async (req, res) => {
     try {
-      const result = await prisma.foodSize.findMany({
+      const result = await prisma.taste.findMany({
         include: {
           FoodCategories: true,
         },
@@ -36,9 +20,23 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
+  create: async (req, res) => {
+    try {
+      await prisma.taste.create({
+        data: {
+          foodCategoryId: req.body.foodCategoryId,
+          name: req.body.foodTasteName,
+          remark: req.body.foodTasteRemark || "",
+        },
+      });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
   remove: async (req, res) => {
     try {
-      await prisma.foodSize.update({
+      await prisma.taste.update({
         data: {
           status: "delete",
         },
@@ -53,15 +51,13 @@ module.exports = {
   },
   update: async (req, res) => {
     try {
-      await prisma.foodSize.update({
+      await prisma.taste.update({
         data: {
-          foodCategoryId: parseInt(req.body.foodCategoriesId),
-          name: req.body.foodSizeName,
-          remark: req.body.foodSizeRemark || "",
-          moneyAdded: req.body.moneyAdd,
+          name: req.body.foodTasteName,
+          remark: req.body.foodTasteRemark || "",
         },
         where: {
-          id: parseInt(req.body.foodSizeId),
+          id: parseInt(req.body.foodTasteId),
         },
       });
       return res.send({ message: "success" });
