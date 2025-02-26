@@ -20,7 +20,10 @@ interface AddListProps {
   fetchDataFoodSizes: () => Promise<void>;
 }
 
-export default function AddList({ foodCategories,fetchDataFoodSizes }: AddListProps) {
+export default function AddList({
+  foodCategories,
+  fetchDataFoodSizes,
+}: AddListProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
   const [foodSizeName, setFoodSizeName] = useState("");
@@ -119,7 +122,7 @@ export default function AddList({ foodCategories,fetchDataFoodSizes }: AddListPr
     setFoodSizeRemark("");
     setMoneyAdd(null);
     setFoodCategoryId(foodCategories[0]?.id || null);
-  }
+  };
 
   return (
     <div>
@@ -127,7 +130,15 @@ export default function AddList({ foodCategories,fetchDataFoodSizes }: AddListPr
         size="md"
         variant="primary"
         startIcon={<PlusIcon />}
-        onClick={openModal}
+        onClick={() => {
+          openModal(),
+            setAlert({
+              show: false,
+              variant: "info",
+              title: "",
+              message: "",
+            });
+        }}
       >
         Add size of food
       </Button>

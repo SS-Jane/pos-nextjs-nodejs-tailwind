@@ -16,7 +16,7 @@ interface AddListProps {
   fetchData: () => Promise<void>;
 }
 
-export default function AddList({fetchData}: AddListProps) {
+export default function AddList({ fetchData }: AddListProps) {
   const { isOpen, openModal, closeModal } = useModal();
   const [categoriesName, setCategoriesName] = useState("");
   const [categoriesRemark, setCategoriesRemark] = useState("");
@@ -27,7 +27,30 @@ export default function AddList({fetchData}: AddListProps) {
     message: "",
   });
 
+  const validateForm = (): boolean => {
+    if (!categoriesName.trim()) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "validation error",
+        message: "Food Categories name is required.",
+      });
+      return false;
+    }
+    setAlert({
+      show: false,
+      variant: "info",
+      title: "",
+      message: "",
+    });
+    return true;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const payload = {
         categoriesName: categoriesName,
@@ -61,10 +84,10 @@ export default function AddList({fetchData}: AddListProps) {
     }
   };
 
-  const clearForm = () =>{
+  const clearForm = () => {
     setCategoriesName("");
     setCategoriesRemark("");
-  }
+  };
 
   return (
     <div>
@@ -72,7 +95,15 @@ export default function AddList({fetchData}: AddListProps) {
         size="md"
         variant="primary"
         startIcon={<PlusIcon />}
-        onClick={openModal}
+        onClick={() => {
+          openModal(),
+            setAlert({
+              show: false,
+              variant: "info",
+              title: "",
+              message: "",
+            });
+        }}
       >
         Add Food categories
       </Button>
@@ -125,7 +156,7 @@ export default function AddList({fetchData}: AddListProps) {
                 Save
               </Button>
             </div>
-            <div>
+            <div className="px-2 mt-4">
               {" "}
               {alert.show && (
                 <Alert

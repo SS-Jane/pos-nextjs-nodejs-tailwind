@@ -173,7 +173,7 @@ export default function BasicTable({
                   <TableCell className="px-1 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
                     <button
                       className="p-1 bg-blue-700 text-white flex items-center justify-center rounded-2xl"
-                      onClick={(category) => {
+                      onClick={(item : FoodCategory ) => {
                         edit(category);
                         openModal();
                       }}
@@ -182,7 +182,7 @@ export default function BasicTable({
                     </button>
                     <button
                       className="p-1 flex items-center justify-center bg-red-700 text-white rounded-2xl"
-                      onClick={(category) => handleRemove(category)}
+                      onClick={(e) => handleRemove(category)}
                     >
                       <TrashBinIcon height="20px" width="20px" />
                     </button>
