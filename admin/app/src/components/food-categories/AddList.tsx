@@ -57,33 +57,32 @@ export default function AddList({ fetchData }: AddListProps) {
         categoriesRemark: categoriesRemark,
       };
 
-      await axios.post(
+      const res = await axios.post(
         `${config.apiServer}/api/foodCategories/create`,
         payload
       );
 
-      Swal.fire({
-        target: document.querySelector(".modal-container"),
-        title: "Add Food categories",
-        html: (
-          <>
-            Add Food categories :{" "}
-            <span className="text-green-500">{categoriesName}</span> success
-          </>
-        ),
-        icon: "success",
-      });
+      if (res.data.messages === "success") {
+        Swal.fire({
+          target: document.querySelector(".modal-container"),
+          title: "Add Food categories",
+          html: `Add Food categories :
+              <span class="text-green-500">{categoriesName}</span> success`,
 
-      setTimeout(() => {
-        closeModal();
-        clearForm();
-        fetchData();
-      }, 1000);
+          icon: "success",
+        });
+
+        setTimeout(() => {
+          closeModal();
+          clearForm();
+          fetchData();
+        }, 1000);
+      }
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
         title: "Error message",
-        text: error.message,
+        text: error.messages,
         icon: "error",
       });
     }
@@ -101,6 +100,7 @@ export default function AddList({ fetchData }: AddListProps) {
         variant="primary"
         startIcon={<PlusIcon />}
         onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           openModal(),
             setAlert({
               show: false,
@@ -108,6 +108,7 @@ export default function AddList({ fetchData }: AddListProps) {
               title: "",
               message: "",
             });
+          clearForm();
         }}
       >
         Add Food categories

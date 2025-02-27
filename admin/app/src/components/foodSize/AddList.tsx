@@ -31,9 +31,7 @@ export default function AddList({
 
   const [moneyAdd, setMoneyAdd] = useState<number | null>(null);
 
-  const [foodCategoryId, setFoodCategoryId] = useState<number | null>(
-    foodCategories[0]?.id || null
-  );
+  const [foodCategoryId, setFoodCategoryId] = useState<number | null>(null);
 
   const [alert, setAlert] = useState({
     show: false,
@@ -93,20 +91,28 @@ export default function AddList({
         moneyAdd: moneyAdd,
       };
 
-      await axios.post(`${config.apiServer}/api/foodSizes/create`, payload);
+      const res = await axios.post(
+        `${config.apiServer}/api/foodSizes/create`,
+        payload
+      );
 
-      Swal.fire({
-        target: document.querySelector(".modal-container"),
-        title: "Add Food Size",
-        html: `Add Food Size : <span class="text-green-500">${foodSizeName}</span> success`,
-        icon: "success",
-      });
+      if (res.data.message === "success") {
+        Swal.fire({
+          target: document.querySelector(".modal-container"),
+          title: "Add Food Size",
+          html: `
+              Add Food Size :
+              <span class="text-green-500">${foodSizeName}</span> success.
+           `,
+          icon: "success",
+        });
 
-      setTimeout(() => {
-        closeModal();
-        clearForm();
-        fetchDataFoodSizes();
-      }, 2000);
+        setTimeout(() => {
+          closeModal();
+          clearForm();
+          fetchDataFoodSizes();
+        }, 2000);
+      }
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
@@ -121,7 +127,7 @@ export default function AddList({
     setFoodSizeName("");
     setFoodSizeRemark("");
     setMoneyAdd(null);
-    setFoodCategoryId(foodCategories[0]?.id || null);
+    setFoodCategoryId(null);
   };
 
   return (
@@ -131,6 +137,7 @@ export default function AddList({
         variant="primary"
         startIcon={<PlusIcon />}
         onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           openModal(),
             setAlert({
               show: false,
@@ -138,6 +145,8 @@ export default function AddList({
               title: "",
               message: "",
             });
+
+          clearForm();
         }}
       >
         Add size of food

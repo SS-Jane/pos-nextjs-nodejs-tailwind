@@ -29,9 +29,7 @@ export default function AddList({
   const [foodTasteName, setFoodTasteName] = useState("");
   const [foodTasteRemark, setFoodTasteRemark] = useState("");
 
-  const [foodCategoryId, setFoodCategoryId] = useState<number | null>(
-    foodCategories[0]?.id || null
-  );
+  const [foodCategoryId, setFoodCategoryId] = useState<number | null>(null);
 
   const [alert, setAlert] = useState({
     show: false,
@@ -86,7 +84,7 @@ export default function AddList({
       Swal.fire({
         target: document.querySelector(".modal-container"),
         title: "Add Food Size",
-        html : `Add Food Size : <span class="text-green-500">${foodTasteName}</span> success`,
+        html: `Add Food Size : <span class="text-green-500">${foodTasteName}</span> success`,
         icon: "success",
       });
 
@@ -108,7 +106,7 @@ export default function AddList({
   const clearForm = () => {
     setFoodTasteName("");
     setFoodTasteRemark("");
-    setFoodCategoryId(foodCategories[0]?.id || null);
+    setFoodCategoryId(null);
   };
 
   return (
@@ -118,6 +116,7 @@ export default function AddList({
         variant="primary"
         startIcon={<PlusIcon />}
         onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           openModal(),
             setAlert({
               show: false,
@@ -125,6 +124,8 @@ export default function AddList({
               title: "",
               message: "",
             });
+
+          clearForm();
         }}
       >
         Add size of food

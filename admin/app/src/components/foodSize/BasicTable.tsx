@@ -21,13 +21,11 @@ import { FoodCategory, FoodSize } from "./FoodSizeTableList";
 import Alert from "../ui/alert/Alert";
 
 interface BasicTableProps {
-  foodCategories: FoodCategory[];
   fetchDataFoodSizes: () => Promise<void>;
   foodSizes: FoodSize[];
 }
 
 export default function BasicTable({
-  foodCategories,
   fetchDataFoodSizes,
   foodSizes,
 }: BasicTableProps) {
@@ -35,8 +33,8 @@ export default function BasicTable({
   const [foodSizeName, setFoodSizeName] = useState("");
   const [foodSizeRemark, setFoodSizeRemark] = useState("");
   const { isOpen, openModal, closeModal } = useModal();
-  const [foodCategoriesName, setFoodCategoriesName] = useState("");
-  const [foodCategoriesId, setFoodCategoriesId] = useState(0);
+  const [foodCategoryName, setFoodCategoryName] = useState("");
+  const [foodCategoryId, setFoodCategoryId] = useState(0);
   const [moneyAdd, setMoneyAdd] = useState<number | null>(null);
   const [alert, setAlert] = useState({
     show: false,
@@ -45,9 +43,8 @@ export default function BasicTable({
     message: "",
   });
 
-  
   const validateForm = (): boolean => {
-    if (!foodCategoriesId) {
+    if (!foodCategoryId) {
       setAlert({
         show: true,
         variant: "warning",
@@ -100,17 +97,19 @@ export default function BasicTable({
         );
         Swal.fire({
           title: "Remove Food Sizes",
-          html: `Remove Food Sizes <span class="text-red-500">${item.name}</span> success`,
+          html: `
+              Remove Food Sizes <span class="text-red-500">${item.name}</span> success
+           `,
           icon: "success",
         });
       }
       setTimeout(() => {
         fetchDataFoodSizes();
       }, 2000);
-    } catch (e: any) {
+    } catch (error: any) {
       Swal.fire({
         title: "Error!",
-        text: e.message,
+        text: error.messages,
         icon: "error",
       });
     }
@@ -123,26 +122,33 @@ export default function BasicTable({
 
     try {
       const payload = {
-        foodCategoriesId : foodCategoriesId,
+        foodCategoriesId: foodCategoryId,
         foodSizeId: foodSizeId,
         foodSizeName: foodSizeName,
         foodSizeRemark: foodSizeRemark,
         moneyAdd: moneyAdd,
-
       };
 
       if (foodSizeId == 0) {
-        await axios.post(`${config.apiServer}/api/foodSizes/create`, payload);
-        Swal.fire({
-          target: document.querySelector(".modal-container"),
-          title: "Add Food size",
-          html: <>Food Size <span className="text-green-500">${foodSizeName}</span> added successfully.</>,
-          icon: "success",
-        });
-        clearForm();
+        const res = await axios.post(
+          `${config.apiServer}/api/foodSizes/create`,
+          payload
+        );
+        if (res.data.messages === "success") {
+          Swal.fire({
+            target: document.querySelector(".modal-container"),
+            title: "Add Food size",
+            html: `
+                Food Size <span class="text-green-500">${foodSizeName}</span> added successfully.
+             `,
+            icon: "success",
+          });
+          clearForm();
+        }
       } else {
-        await axios.put(`${config.apiServer}/api/foodSizes/update`, payload);
-        setFoodSizeId(0);
+        const res = await axios.put(`${config.apiServer}/api/foodSizes/update`, payload);
+        if (res.data.messages === "success") {
+          
         Swal.fire({
           target: document.querySelector(".modal-container"),
           title: "Edit Food Categories",
@@ -151,9 +157,12 @@ export default function BasicTable({
         });
       }
       setTimeout(() => {
+        clearForm()
         closeModal();
         fetchDataFoodSizes();
       }, 2000);
+        }
+        
     } catch (error: unknown) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
@@ -169,19 +178,15 @@ export default function BasicTable({
     setFoodSizeName(item.name);
     setFoodSizeRemark(item.remark);
     setMoneyAdd(item.moneyAdded);
-    const category = foodCategories.find(
-      (cat) => cat.id === item.foodCategoryId
-    );
-    if (category) {
-      setFoodCategoriesName(category.name);
-      setFoodCategoriesId(category.id);
-    }
+    setFoodCategoryName(item.FoodCategories.name);
+    setFoodCategoryId(item.FoodCategories.id);
   };
 
   const clearForm = () => {
     setFoodSizeId(0);
     setFoodSizeName("");
     setFoodSizeRemark("");
+    setMoneyAdd(0)
   };
 
   return (
@@ -234,16 +239,13 @@ export default function BasicTable({
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
               {foodSizes.map((foodSize) => {
-                const category = foodCategories.find(
-                  (cat) => cat.id === foodSize.foodCategoryId
-                );
                 return (
                   <TableRow key={foodSize.id}>
                     <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                       {foodSize.id}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {category ? category.name : "-"}
+                      {foodSize ? foodSize.FoodCategories.name : "-"}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                       {foodSize.name}
@@ -257,7 +259,7 @@ export default function BasicTable({
                     <TableCell className="px-1 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
                       <button
                         className="p-1 bg-blue-700 text-white flex items-center justify-center rounded-2xl"
-                        onClick={(item : FoodSize) => {
+                        onClick={(item: FoodSize) => {
                           edit(foodSize);
                           openModal();
                         }}
@@ -286,10 +288,14 @@ export default function BasicTable({
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              {foodSizeId === 0
-                ? ("Add Food size")
-                : (<>
-                `Edit Food Size : <span className="text-blue-500">{foodCategoriesName}</span>`</>)}
+              {foodSizeId === 0 ? (
+                "Add Food size"
+              ) : (
+                <>
+                  Edit Food Size :{" "}
+                  <span className="text-blue-500">{foodCategoryName}</span>
+                </>
+              )}
             </h4>
           </div>
           <form
@@ -341,14 +347,14 @@ export default function BasicTable({
             </div>
           </form>
           <div className="mt-5">
-              {alert.show && (
-                <Alert
-                  variant={alert.variant}
-                  title={alert.title}
-                  message={alert.message}
-                />
-              )}
-            </div>
+            {alert.show && (
+              <Alert
+                variant={alert.variant}
+                title={alert.title}
+                message={alert.message}
+              />
+            )}
+          </div>
         </div>
       </Modal>
     </div>
