@@ -39,7 +39,9 @@ model FoodCategories {
   name     String
   remark   String?
   status   String     @default("use")
-  FoodSize FoodSize[]
+  FoodSizes FoodSize[]
+  Tastes    Taste[]
+  Foods   Food[]
 }
 
 model FoodSize {
@@ -50,4 +52,24 @@ model FoodSize {
   moneyAdded     Int
   status         String         @default("use")
   FoodCategories FoodCategories @relation(fields: [foodCategoryId], references: [id])
+}
+
+model Taste {
+  id             Int            @id() @default(autoincrement())
+  name           String
+  remark         String?
+  foodCategoryId Int
+  status         String         @default("use")
+  FoodCategories FoodCategories @relation(fields: [foodCategoryId], references: [id])
+}
+
+model Food {
+  id             Int            @id() @default(autoincrement())
+  name           String
+  img            String
+  remark         String?
+  status         String         @default("use")
+  price          Int
+  FoodCategoryId Int
+  FoodCategories FoodCategories @relation(fields: [FoodCategoryId], references: [id])
 }

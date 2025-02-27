@@ -10,8 +10,13 @@ import axios from "axios";
 import config from "@/config";
 import { useState } from "react";
 import Alert from "../ui/alert/Alert";
+import Swal from "sweetalert2";
 
-export default function AddList() {
+interface AddListProps {
+  fetchData: () => Promise<void>;
+}
+
+export default function AddList({ fetchData }: AddListProps) {
   const { isOpen, openModal, closeModal } = useModal();
   const [categoriesName, setCategoriesName] = useState("");
   const [categoriesRemark, setCategoriesRemark] = useState("");
@@ -22,49 +27,70 @@ export default function AddList() {
     message: "",
   });
 
+  const validateForm = (): boolean => {
+    if (!categoriesName.trim()) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "validation error",
+        message: "Food Categories name is required.",
+      });
+      return false;
+    }
+    setAlert({
+      show: false,
+      variant: "info",
+      title: "",
+      message: "",
+    });
+    return true;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const payload = {
         categoriesName: categoriesName,
         categoriesRemark: categoriesRemark,
       };
 
-      await axios.post(
+      const res = await axios.post(
         `${config.apiServer}/api/foodCategories/create`,
         payload
       );
 
-      setAlert({
-        show: true,
-        variant: "success",
-        title: "Add Food Categories",
-        message: `Add Food Categories ${categoriesName} success`,
-      });
+      if (res.data.messages === "success") {
+        Swal.fire({
+          target: document.querySelector(".modal-container"),
+          title: "Add Food categories",
+          html: `Add Food categories :
+              <span class="text-green-500">{categoriesName}</span> success`,
 
-      setTimeout(() => {
-        closeModal();
-      }, 3000);
-      
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        const customMessage = error.message.includes("401")
-          ? "invalid username or password"
-          : error.message;
-        setAlert({
-          show: true,
-          variant: "error",
-          title: "Error message",
-          message: customMessage,
+          icon: "success",
         });
-      } else {
-        setAlert({
-          show: true,
-          variant: "error",
-          title: "Error message",
-          message: "An unknown error occurred",
-        });
+
+        setTimeout(() => {
+          closeModal();
+          clearForm();
+          fetchData();
+        }, 1000);
       }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-container"),
+        title: "Error message",
+        text: error.messages,
+        icon: "error",
+      });
     }
+  };
+
+  const clearForm = () => {
+    setCategoriesName("");
+    setCategoriesRemark("");
   };
 
   return (
@@ -73,19 +99,39 @@ export default function AddList() {
         size="md"
         variant="primary"
         startIcon={<PlusIcon />}
-        onClick={openModal}
+        onClick={() => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+          openModal(),
+            setAlert({
+              show: false,
+              variant: "info",
+              title: "",
+              message: "",
+            });
+          clearForm();
+        }}
       >
         Add Food categories
       </Button>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="modal-container max-w-[700px] m-4"
+      >
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Add Food categories list
             </h4>
           </div>
-          <form className="flex flex-col">
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="px-2 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
@@ -112,11 +158,11 @@ export default function AddList() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" type="submit">
                 Save
               </Button>
             </div>
-            <div>
+            <div className="px-2 mt-4">
               {" "}
               {alert.show && (
                 <Alert

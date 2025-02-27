@@ -17,10 +17,8 @@ export default function page() {
     <div>
       <PageBreadcrumb pageTitle="Categories of food" />
 
-      <div className="p-2 rounded-2xl border  border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <AddList />
-      </div>
-      <div className="mt-5">
+      
+      <div>
         <CategoriesTableList />
       </div>
     </div>
