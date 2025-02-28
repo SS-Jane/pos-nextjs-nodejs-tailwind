@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 module.exports = {
   list: async (req, res) => {
     try {
-      const result = await prisma.taste.findMany({
+      const results = await prisma.taste.findMany({
         include: {
           FoodCategories: true,
         },
@@ -15,7 +15,7 @@ module.exports = {
           id: "desc",
         },
       });
-      return res.send({ result: result });
+      return res.send({ results : results });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
@@ -29,7 +29,7 @@ module.exports = {
           remark: req.body.foodTasteRemark || "",
         },
       });
-      return res.send({ message: "success" });
+      return res.send({ message : "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

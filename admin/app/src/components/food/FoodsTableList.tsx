@@ -22,6 +22,7 @@ export interface Foods {
   img: string;
   price: number;
   status: string;
+  foodCategory : string
   foodCategoryId: number;
   FoodCategories: FoodCategories;
 }
@@ -39,7 +40,7 @@ export default function FoodsTableList() {
   const fetchDataFoods = async () => {
     try {
       const res = await axios.get(`${config.apiServer}/api/foods/list`);
-      setFoods(res.data.result);
+      setFoods(res.data.results);
     } catch (error: any) {
       Swal.fire({
         title: "Error message",
@@ -56,7 +57,7 @@ export default function FoodsTableList() {
       const res = await axios.get(
         `${config.apiServer}/api/foodCategories/list`
       );
-      setFoodCategories(res.data.result);
+      setFoodCategories(res.data.results);
     } catch (error: any) {
       Swal.fire({
         title: "Error message",

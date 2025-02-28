@@ -38,7 +38,7 @@ export default function FoodTastesTableList() {
       const res = await axios.get(
         `${config.apiServer}/api/foodCategories/list`
       );
-      setFoodCategories(res.data.result);
+      setFoodCategories(res.data.results);
     } catch (error: any) {
       Swal.fire({
         title: "Error message",
@@ -53,7 +53,7 @@ export default function FoodTastesTableList() {
   const fetchDataFoodTastes = async () => {
     try {
       const res = await axios.get(`${config.apiServer}/api/foodTastes/list`);
-      setFoodTastes(res.data.result);
+      setFoodTastes(res.data.results);
     } catch (error: any) {
       Swal.fire({
         title: "Error message",
