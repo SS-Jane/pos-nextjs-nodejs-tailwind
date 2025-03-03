@@ -75,6 +75,7 @@ app.get("/api/foods/filter/:foodCategory", (req, res) =>
 app.post("/api/saleTemp/create", (req, res) =>
   SaleTempController.create(req, res)
 );
+app.get("/api/saleTemp/list", (req, res) => SaleTempController.list(req, res));
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");

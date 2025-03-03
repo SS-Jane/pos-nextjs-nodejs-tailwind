@@ -82,7 +82,7 @@ model SaleTemp {
   id             Int              @id @default(autoincrement())
   userId         Int
   tableNumber    Int
-  SaleTempDetail SaleTempDetail[]
+  SaleTempDetails SaleTempDetail[]
 }
 
 model SaleTempDetail {
