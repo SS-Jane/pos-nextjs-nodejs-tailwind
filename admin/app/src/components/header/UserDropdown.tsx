@@ -50,7 +50,7 @@ export default function UserDropdown() {
       localStorage.removeItem('posEmail')
 
       setTimeout(() => {  
-        router.push('/signIn')
+        router.push('/signin')
       }, 5000);
     
 

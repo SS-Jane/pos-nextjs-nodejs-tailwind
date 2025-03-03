@@ -13,8 +13,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(fileUpload());
-
+app.use("/uploads", express.static("uploads"));
+// ---User API---
 app.post("/api/user/signIn", (req, res) => UserController.signIn(req, res));
+app.post("/api/user/signUp", (req, res) => UserController.signUp(req, res));
+
+// ---Food categories API---
 app.post("/api/foodCategories/create", (req, res) =>
   FoodCategoriesController.create(req, res)
 );
@@ -28,6 +32,7 @@ app.put("/api/foodCategories/update", (req, res) =>
   FoodCategoriesController.update(req, res)
 );
 
+// ---Food sizes API---
 app.post("/api/foodSizes/create", (req, res) =>
   FoodSizeController.create(req, res)
 );
@@ -39,6 +44,7 @@ app.put("/api/foodSizes/update", (req, res) =>
   FoodSizeController.update(req, res)
 );
 
+// ---Food taste API---
 app.get("/api/foodTastes/list", (req, res) =>
   FoodTastesController.list(req, res)
 );
@@ -52,9 +58,14 @@ app.put("/api/foodTastes/update", (req, res) =>
   FoodTastesController.update(req, res)
 );
 
+// ---Foods API---
 app.get("/api/foods/list", (req, res) => FoodController.list(req, res));
 app.post("/api/foods/upload", (req, res) => FoodController.upload(req, res));
 app.post("/api/foods/create", (req, res) => FoodController.create(req, res));
+app.delete("/api/foods/remove/:id", (req, res) =>
+  FoodController.remove(req, res)
+);
+app.put("/api/foods/update", (req, res) => FoodController.update(req, res));
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
