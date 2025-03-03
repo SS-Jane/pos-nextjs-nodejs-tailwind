@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState } from "react";
@@ -21,6 +20,8 @@ import { useModal } from "@/hooks/useModal";
 import { Foods } from "./FoodsTableList";
 import Alert from "../ui/alert/Alert";
 import Image from "next/image";
+import FileInput from "../form/input/FileInput";
+import Radio from "../form/input/Radio";
 
 interface BasicTableProps {
   fetchDataFoods: () => Promise<void>;
@@ -32,10 +33,12 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
   const [foodName, setFoodName] = useState("");
   const [foodRemark, setFoodRemark] = useState("");
   const [foodImg, setFoodImg] = useState("");
+  const [myFiles, setMyFiles] = useState<File | null>(null);
   const [foodPrice, setFoodPrice] = useState(0);
   const { isOpen, openModal, closeModal } = useModal();
   const [foodCategoryName, setFoodCategoryName] = useState("");
   const [foodCategoryId, setFoodCategoryId] = useState(0);
+  const [foodCategory, setFoodCategory] = useState("food");
   const [alert, setAlert] = useState({
     show: false,
     variant: "info" as "warning" | "error" | "success" | "info",
@@ -63,7 +66,7 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
       });
       return false;
     }
-    if (foodPrice === null || isNaN(foodPrice)) {
+    if (foodPrice === null || "") {
       setAlert({
         show: true,
         variant: "warning",
@@ -92,20 +95,24 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
       });
 
       if (button.isConfirmed) {
-        await axios.delete(`${config.apiServer}/api/foods/remove/${item.id}`);
-        Swal.fire({
-          title: "Remove Food",
-          html: `Remove Food : <span class="text-red-500">${item.name}</span> success`,
-          icon: "success",
-        });
+        const res = await axios.delete(
+          `${config.apiServer}/api/foods/remove/${item.id}`
+        );
+        if (res.data.message === "success") {
+          Swal.fire({
+            title: "Remove Food",
+            html: `Remove Food : <span class="text-red-500">${item.name}</span> success`,
+            icon: "success",
+          });
+          setTimeout(() => {
+            fetchDataFoods();
+          }, 2000);
+        }
       }
-      setTimeout(() => {
-        fetchDataFoods();
-      }, 2000);
     } catch (error: any) {
       Swal.fire({
         title: "Error!",
-        text: error.messages,
+        text: error.message,
         icon: "error",
       });
     }
@@ -117,13 +124,16 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
     }
 
     try {
+      const uploadedImg = myFiles ? await handleUpload() : foodImg;
+
       const payload = {
         foodCategoriesId: foodCategoryId,
         foodId: foodId,
         foodName: foodName,
         foodRemark: foodRemark,
-        foodImg: foodImg,
+        foodImg: uploadedImg,
         foodPrice: foodPrice,
+        foodCategory: foodCategory,
       };
 
       if (foodId == 0) {
@@ -131,7 +141,7 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
           `${config.apiServer}/api/foods/create`,
           payload
         );
-        if (res.data.messages === "success") {
+        if (res.data.message === "success") {
           Swal.fire({
             target: document.querySelector(".modal-container"),
             title: "Add Food Taste",
@@ -145,11 +155,11 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
           `${config.apiServer}/api/foods/update`,
           payload
         );
-        if (res.data.messages === "success") {
+        if (res.data.message === "success") {
           Swal.fire({
             target: document.querySelector(".modal-container"),
             title: "Edit Food Categories",
-            html: `Add Food Categories : <span class="text-green-500">${foodName} and ${foodRemark}</span> success`,
+            html: `Add Food Categories : <span class="text-green-500">${foodName}</span> success`,
             icon: "success",
           });
         }
@@ -169,13 +179,55 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
     }
   };
 
+  const handleUpload = async (): Promise<string | null> => {
+    try {
+      if (!myFiles) {
+        return foodImg;
+      }
+
+      const formData = new FormData();
+      formData.append("myFiles", myFiles);
+
+      const res = await axios.post(
+        `${config.apiServer}/api/foods/upload`,
+        formData
+      );
+
+      if (res.data.fileName) {
+        return res.data.fileName;
+      } else {
+        return foodImg;
+      }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-container"),
+        title: "Error message",
+        text: error.message,
+        icon: "error",
+      });
+      return foodImg;
+    }
+  };
+
   const edit = (item: Foods) => {
     setFoodId(item.id);
     setFoodName(item.name);
     setFoodRemark(item.remark);
-    setFoodPrice(item.price)
+    setFoodPrice(item.price);
     setFoodCategoryName(item.FoodCategories.name);
     setFoodCategoryId(item.FoodCategories.id);
+    setFoodImg(item.img);
+    setMyFiles(null);
+  };
+
+  const handleSelectedFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setMyFiles(file);
+
+      const imageUrl = URL.createObjectURL(file);
+      setFoodImg(imageUrl);
+    }
   };
 
   const clearForm = () => {
@@ -184,6 +236,29 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
     setFoodRemark("");
     setFoodImg("");
     setFoodPrice(0);
+    setMyFiles(null);
+  };
+
+  const showImage = (food: Foods) => {
+    if (!food || !food.img) {
+      return (
+        <Image
+          src={`${config.apiServer}/uploads/default-image.webp`}
+          alt="Default image"
+          width={100}
+          height={100}
+        />
+      );
+    }
+
+    return (
+      <Image
+        src={`${config.apiServer}/uploads/${food.img}`}
+        alt={food.name}
+        width={100}
+        height={100}
+      />
+    );
   };
 
   return (
@@ -204,7 +279,13 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
                   isHeader
                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                 >
-                  Food category name
+                  Food categories
+                </TableCell>
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                >
+                  Food category
                 </TableCell>
                 <TableCell
                   isHeader
@@ -251,13 +332,16 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
                       {food.FoodCategories.name || "-"}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      {food.name}
+                      {food.foodCategory || "-"}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                      {food.name}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-gray-500 text- start text-theme-sm dark:text-gray-400">
                       {food.price}
                     </TableCell>
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                      <Image src={`${config.apiServer}/uploads/${food.img}`} alt={food.name} width={50} height={50}/>
+                      {showImage(food)}
                     </TableCell>
 
                     <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
@@ -296,7 +380,7 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               {foodId === 0 ? (
-                "Add Food Taste"
+                "Add Food name"
               ) : (
                 <>
                   Edit Food :{" "}
@@ -315,23 +399,73 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
             <div className="px-2 overflow-y-auto custom-scrollbar">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Food Taste name</Label>
+                  <Label>Food category</Label>
+                  <div>
+                    <Radio
+                      id="foodCategory-food"
+                      name="foodCategory"
+                      value="food"
+                      checked={foodCategory === "food"}
+                      onChange={() => setFoodCategory("food")}
+                      label="Food"
+                    />
+                    <Radio
+                      id="foodCategory-drink"
+                      name="foodCategory"
+                      value="drink"
+                      checked={foodCategory === "drink"}
+                      onChange={() => setFoodCategory("drink")}
+                      label="Drink"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label>Food name</Label>
                   <Input
                     type="text"
-                    placeholder="Food Taste name"
+                    placeholder="Food name"
                     value={foodName}
                     onChange={(e) => setFoodName(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <Label>Price</Label>
+                  <Label>Food price</Label>
                   <Input
                     type="number"
-                    placeholder="Add price of food"
-                    value={foodPrice !== null ? foodPrice : ""}
+                    placeholder="Price of food"
+                    value={foodPrice !== null ? foodPrice : "0"}
                     onChange={(e) => setFoodPrice(parseInt(e.target.value))}
                   />
+                </div>
+
+                <div>
+                  <Label>Food image</Label>
+                  <FileInput onChange={handleSelectedFile} />
+                  <div className="mt-2">
+                    {myFiles ? (
+                      <Image
+                        src={URL.createObjectURL(myFiles)}
+                        alt="Preview"
+                        height={100}
+                        width={100}
+                      />
+                    ) : foodImg ? (
+                      <Image
+                        src={`${config.apiServer}/uploads/${foodImg}`}
+                        alt="Existing"
+                        height={100}
+                        width={100}
+                      />
+                    ) : (
+                      <Image
+                        src={`${config.apiServer}/uploads/default-image.webp`}
+                        alt="Default"
+                        height={100}
+                        width={100}
+                      />
+                    )}
+                  </div>
                 </div>
 
                 <div>
@@ -352,16 +486,16 @@ export default function BasicTable({ fetchDataFoods, foods }: BasicTableProps) {
                 Save
               </Button>
             </div>
+            <div className="mt-5">
+              {alert.show && (
+                <Alert
+                  variant={alert.variant}
+                  title={alert.title}
+                  message={alert.message}
+                />
+              )}
+            </div>
           </form>
-          <div className="mt-5">
-            {alert.show && (
-              <Alert
-                variant={alert.variant}
-                title={alert.title}
-                message={alert.message}
-              />
-            )}
-          </div>
         </div>
       </Modal>
     </div>

@@ -13,6 +13,9 @@ import Swal from "sweetalert2";
 import Select from "../form/Select";
 import Alert from "../ui/alert/Alert";
 import { FoodCategories } from "./FoodsTableList";
+import FileInput from "../form/input/FileInput";
+import Radio from "../form/input/Radio";
+import Image from "next/image";
 
 interface AddListProps {
   foodCategories: FoodCategories[];
@@ -27,9 +30,10 @@ export default function AddList({
   const { isOpen, openModal, closeModal } = useModal();
   const [foodName, setFoodName] = useState("");
   const [foodRemark, setFoodRemark] = useState("");
-  const [foodPrice, setFoodPrice] = useState(0);
+  const [foodPrice, setFoodPrice] = useState<number | null>(null);
   const [foodImg, setFoodImg] = useState("");
   const [myFiles, setMyFiles] = useState<File | null>(null);
+  const [foodCategory, setFoodCategory] = useState("food");
 
   const [foodCategoryId, setFoodCategoryId] = useState<number | null>(null);
 
@@ -60,7 +64,7 @@ export default function AddList({
       });
       return false;
     }
-    if (foodPrice === null || isNaN(foodPrice)) {
+    if (foodPrice === null) {
       setAlert({
         show: true,
         variant: "warning",
@@ -84,13 +88,16 @@ export default function AddList({
     }
 
     try {
-      await handleUpload();
+      const uploadedImg = await handleUpload();
+      const finalFoodImg = uploadedImg || "default-image.webp";
+
       const payload = {
         foodName: foodName,
         foodPrice: foodPrice,
-        foodImg: foodImg,
+        foodImg: finalFoodImg,
         foodRemark: foodRemark,
         foodCategoryId: foodCategoryId,
+        foodCategory: foodCategory,
       };
 
       const res = await axios.post(
@@ -98,7 +105,7 @@ export default function AddList({
         payload
       );
 
-      if (res.data.messages === "success") {
+      if (res.data.message === "success") {
         Swal.fire({
           target: document.querySelector(".modal-container"),
           title: "Add Food",
@@ -124,8 +131,12 @@ export default function AddList({
     }
   };
 
-  const handleUpload = async (): Promise<void> => {
+  const handleUpload = async (): Promise<string | null> => {
     try {
+      if (!myFiles) {
+        return "default-image.webp";
+      }
+
       const formData = new FormData();
       formData.append("myFiles", myFiles);
 
@@ -133,22 +144,30 @@ export default function AddList({
         `${config.apiServer}/api/foods/upload`,
         formData
       );
-      if (res.data.messages === "success") {
-        setFoodImg(res.data.fileName);
+
+      if (res.data.fileName) {
+        return res.data.fileName;
+      } else {
+        return "default-image.webp";
       }
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
         title: "Error message",
-        text: error.messages,
+        text: error.message,
         icon: "error",
       });
+      return "default-image.webp";
     }
   };
 
-  const handleSelectedFile = (e) => {
-    if (e.target.files.length > 0) {
-      setMyFiles(e.target.files[0]);
+  const handleSelectedFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setMyFiles(file);
+
+      const imageUrl = URL.createObjectURL(file);
+      setFoodImg(imageUrl);
     }
   };
 
@@ -158,7 +177,7 @@ export default function AddList({
     setFoodImg("");
     setFoodRemark("");
     setFoodCategoryId(null);
-    setFoodImg("")
+    setMyFiles(null);
   };
 
   return (
@@ -215,6 +234,27 @@ export default function AddList({
                   />
                 </div>
                 <div>
+                  <Label>Food category</Label>
+                  <div>
+                    <Radio
+                      id="foodCategory-food"
+                      name="foodCategory"
+                      value="food"
+                      checked={foodCategory === "food"}
+                      onChange={() => setFoodCategory("food")}
+                      label="Food"
+                    />
+                    <Radio
+                      id="foodCategory-drink"
+                      name="foodCategory"
+                      value="drink"
+                      checked={foodCategory === "drink"}
+                      onChange={() => setFoodCategory("drink")}
+                      label="Drink"
+                    />
+                  </div>
+                </div>
+                <div>
                   <Label>Food name</Label>
                   <Input
                     type="text"
@@ -229,16 +269,39 @@ export default function AddList({
                   <Input
                     type="number"
                     placeholder="Price of food"
-                    value={foodPrice !== null ? foodPrice : ""}
+                    value={foodPrice !== null ? foodPrice : "0"}
                     onChange={(e) => setFoodPrice(parseInt(e.target.value))}
                   />
                 </div>
 
                 <div>
                   <Label>Food image</Label>
-                  <Input type="file" onChange={handleSelectedFile} />
+                  <FileInput onChange={handleSelectedFile} />
+                  <div className="mt-2">
+                    {myFiles ? (
+                      <Image
+                        src={URL.createObjectURL(myFiles)}
+                        alt="Preview"
+                        height={100}
+                        width={100}
+                      />
+                    ) : foodImg && foodImg !== "null" ? (
+                      <Image
+                        src={`${config.apiServer}/uploads/${foodImg}`}
+                        alt="Existing"
+                        height={100}
+                        width={100}
+                      />
+                    ) : (
+                      <Image
+                        src={`${config.apiServer}/uploads/default-image.webp`}
+                        alt="Default"
+                        height={100}
+                        width={100}
+                      />
+                    )}
+                  </div>
                 </div>
-
                 <div>
                   <Label>Remark</Label>
                   <Input

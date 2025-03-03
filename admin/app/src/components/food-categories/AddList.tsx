@@ -62,12 +62,12 @@ export default function AddList({ fetchData }: AddListProps) {
         payload
       );
 
-      if (res.data.messages === "success") {
+      if (res.data.message === "success") {
         Swal.fire({
           target: document.querySelector(".modal-container"),
           title: "Add Food categories",
           html: `Add Food categories :
-              <span class="text-green-500">{categoriesName}</span> success`,
+              <span class="text-green-500">${categoriesName}</span> success`,
 
           icon: "success",
         });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, {  useState } from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -25,13 +25,40 @@ interface BasicTableProps {
 }
 
 export default function BasicTable({
-  foodCategories,
+  foodCategories=[],
   fetchData,
 }: BasicTableProps) {
   const [id, setId] = useState(0);
   const [categoriesName, setCategoriesName] = useState("");
   const [categoriesRemark, setCategoriesRemark] = useState("");
   const { isOpen, openModal, closeModal } = useModal();
+  const [alert, setAlert] = useState({
+      show: false,
+      variant: "info" as "warning" | "error" | "success" | "info",
+      title: "",
+      message: "",
+    });
+
+
+  const validateForm = (): boolean => {
+    if (!categoriesName) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation error",
+        message: "Please select a food category.",
+      });
+      return false;
+    }
+    setAlert({
+      show: false,
+      variant: "info",
+      title: "",
+      message: "",
+    });
+    return true;
+  };
+
 
   const handleRemove = async (item: any) => {
     try {
@@ -44,15 +71,16 @@ export default function BasicTable({
       });
 
       if (button.isConfirmed) {
-        await axios.delete(
+        const res = await axios.delete(
           `${config.apiServer}/api/foodCategories/remove/${item.id}`
         );
-        Swal.fire({
-          target: document.querySelector(".modal-container"),
-          title: "Remove Food Categories",
-          text: `Remove Food Categories ${item.name} success`,
-          icon: "success",
-        });
+        if (res.data.message === "success") {
+          Swal.fire({
+            title: "Remove Food Categories",
+            html: `Remove Food Categories: <span class="text-red-500">${item.name}</span> success`,
+            icon: "success",
+          });
+        }
       }
       setTimeout(() => {
         fetchData();
@@ -71,7 +99,6 @@ export default function BasicTable({
       return;
     }
 
-
     try {
       const payload = {
         id: id,
@@ -80,38 +107,43 @@ export default function BasicTable({
       };
 
       if (id == 0) {
-        await axios.post(
+        const res = await axios.post(
           `${config.apiServer}/api/foodCategories/create`,
           payload
         );
-        Swal.fire({
-          target: document.querySelector(".modal-container"),
-          title: "Add Food Categories",
-          text: `Add Food Categories ${categoriesName} success`,
-          icon: "success",
-        });
+        if (res.data.message === "success") {
+          Swal.fire({
+            target: document.querySelector(".modal-container"),
+            title: "Add Food Categories",
+            html: `Add Food Categories <span class="text-green-500">${categoriesName}</span> success`,
+            icon: "success",
+          });
 
-        setTimeout(() => {
-          closeModal();
-          fetchData();
-        }, 2000);
+          setTimeout(() => {
+            clearForm();
+            closeModal();
+            fetchData();
+          }, 2000);
+        }
       } else {
-        await axios.put(
+        const res = await axios.put(
           `${config.apiServer}/api/foodCategories/update`,
           payload
         );
-        setId(0);
-        Swal.fire({
-          target: document.querySelector(".modal-container"),
-          title: "Edit Food Categories",
-          text: `Add Food Categories ${categoriesName} and ${categoriesRemark} success`,
-          icon: "success",
-        });
+        if (res.data.message === "success") {
+          Swal.fire({
+            target: document.querySelector(".modal-container"),
+            title: "Edit Food Categories",
+            html: `Add Food Categories <span class="text-green-500">${categoriesName}</span> success`,
+            icon: "success",
+          });
+        }
+        setTimeout(() => {
+          clearForm();
+          closeModal();
+          fetchData();
+        }, 2000);
       }
-      setTimeout(() => {
-        closeModal();
-        fetchData();
-      }, 2000);
     } catch (error: any) {
       Swal.fire({
         title: "Error!",
@@ -126,6 +158,18 @@ export default function BasicTable({
     setCategoriesName(item.name);
     setCategoriesRemark(item.remark);
   };
+
+  const clearForm = () => {
+    setId(0);
+    setCategoriesName("");
+    setCategoriesRemark("");
+  };
+
+  if (!foodCategories) {
+    return <p>Loading categories...</p>;
+  }
+
+  
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -164,7 +208,7 @@ export default function BasicTable({
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {foodCategories.map((category: any) => (
+              {foodCategories?.map((category: any) => (
                 <TableRow key={category.id}>
                   <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                     {category.id}
@@ -178,7 +222,7 @@ export default function BasicTable({
                   <TableCell className="px-1 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
                     <button
                       className="p-1 bg-blue-700 text-white flex items-center justify-center rounded-2xl"
-                      onClick={(item : FoodCategory ) => {
+                      onClick={(item: FoodCategory) => {
                         edit(category);
                         openModal();
                       }}
@@ -206,7 +250,7 @@ export default function BasicTable({
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-            {id === 0 ? 'Add Food size' : 'Edit Food Size'}
+              {id === 0 ? "Add Food size" : "Edit Food Size"}
             </h4>
           </div>
           <form

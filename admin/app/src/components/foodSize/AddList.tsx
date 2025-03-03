@@ -12,10 +12,10 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import Select from "../form/Select";
 import Alert from "../ui/alert/Alert";
-import { FoodCategory } from "./FoodSizeTableList";
+import { FoodCategories } from "./FoodSizeTableList";
 
 interface AddListProps {
-  foodCategories: FoodCategory[];
+  foodCategories: FoodCategories[];
   fetchDataFoodCategories: () => Promise<void>;
   fetchDataFoodSizes: () => Promise<void>;
 }
@@ -199,7 +199,7 @@ export default function AddList({
                   <Input
                     type="number"
                     placeholder="add more price"
-                    value={moneyAdd !== null ? moneyAdd : ""}
+                    value={moneyAdd !== null ? moneyAdd : "0"}
                     onChange={(e) => setMoneyAdd(parseFloat(e.target.value))}
                   />
                 </div>
