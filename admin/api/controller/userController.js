@@ -54,6 +54,11 @@ module.exports = {
         token: token,
         username: user.username,
         email: user.email,
+        id: user.id,
+        fname: user.fname,
+        lname: user.lname,
+        level: user.level,
+        phone: user.phone,
       });
     } catch (error) {
       return res.status(500).send({ error: error.message });

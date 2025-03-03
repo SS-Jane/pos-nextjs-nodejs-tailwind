@@ -6,6 +6,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const FoodTastesController = require("./controller/FoodTastesController");
 const FoodController = require("./controller/FoodController");
+const SaleTempController = require("./controller/SaleTempController");
 const app = express();
 const fileUpload = require("express-fileupload");
 
@@ -66,6 +67,14 @@ app.delete("/api/foods/remove/:id", (req, res) =>
   FoodController.remove(req, res)
 );
 app.put("/api/foods/update", (req, res) => FoodController.update(req, res));
+app.get("/api/foods/filter/:foodCategory", (req, res) =>
+  FoodController.filter(req, res)
+);
+
+// ---SaleTemp API---
+app.post("/api/saleTemp/create", (req, res) =>
+  SaleTempController.create(req, res)
+);
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
