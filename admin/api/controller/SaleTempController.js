@@ -8,25 +8,37 @@ module.exports = {
         return res.status(400).send({ error: "Missing required fields" });
       }
 
+      let saleTempId = 0;
+
       const rowSaleTemp = await prisma.saleTemp.findFirst({
         where: {
           userId: req.body.userId,
-          tableNumber: req.body.TableNumber,
+          tableNumber: req.body.tableNumber,
+          foodId: req.body.foodId,
         },
       });
 
-      let saleTempId = 0;
-
       if (!rowSaleTemp) {
-        const saleTemp = await prisma.saleTemp.create({
+        const createdSaleTemp = await prisma.saleTemp.create({
           data: {
             userId: parseInt(req.body.userId),
             tableNumber: parseInt(req.body.tableNumber),
+            foodId: parseInt(req.body.foodId),
+            qty: 1,
           },
         });
-        saleTempId = saleTemp.id;
+
+        saleTempId = createdSaleTemp.id;
       } else {
-        saleTempId = rowSaleTemp.id;
+        const updatedSaleTemp = await prisma.saleTemp.update({
+          where: {
+            id: rowSaleTemp.id,
+          },
+          data: {
+            qty: rowSaleTemp.qty + 1,
+          },
+        });
+        saleTempId = updatedSaleTemp.id;
       }
 
       if (!saleTempId) {
@@ -34,16 +46,7 @@ module.exports = {
         return res.status(500).send({ error: "Database error" });
       }
 
-      const results = await prisma.saleTempDetail.create({
-        data: {
-          saleTempId: saleTempId,
-          foodId: req.body.foodId,
-          tasteId: req.body.tasteId || null,
-          foodSizeId: req.body.foodSizeId || null,
-        },
-      });
-
-      return res.send({ message: "success", results : results  });
+      return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
@@ -59,9 +62,73 @@ module.exports = {
               FoodSize: true,
             },
           },
+          Food: true,
+        },
+        orderBy: {
+          id: "desc",
         },
       });
       return res.send({ results: saleTemps });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  remove: async (req, res) => {
+    try {
+      await prisma.saleTemp.delete({
+        where: {
+          id: parseInt(req.params.id),
+        },
+      });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  removeAll: async (req, res) => {
+    try {
+      const saleTemps = await prisma.saleTemp.findMany({
+        where: {
+          userId: parseInt(req.body.userId),
+          tableNumber: parseInt(req.body.tableNumber),
+        },
+        select: { id: true },
+      });
+
+      const saleTempIds = saleTemps.map((st) => st.id);
+
+      if (saleTempIds.length === 0) {
+        return res.send({ message: "No records found" });
+      }
+
+      await prisma.saleTempDetail.deleteMany({
+        where: {
+          saleTempId: { in: saleTempIds },
+        },
+      });
+
+      await prisma.saleTemp.deleteMany({
+        where: {
+          id: { in: saleTempIds },
+        },
+      });
+
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  updateQty: async (req, res) => {
+    try {
+      await prisma.saleTemp.update({
+        where: {
+          id: req.body.id,
+        },
+        data: {
+          qty: req.body.qty,
+        },
+      });
+      return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

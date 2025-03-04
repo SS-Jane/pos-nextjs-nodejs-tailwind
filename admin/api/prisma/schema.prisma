@@ -51,7 +51,7 @@ model FoodSize {
   foodCategoryId Int
   moneyAdded     Int
   status         String           @default("use")
-  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id])
+  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id],onDelete: Cascade)
   SaleTempDetail SaleTempDetail[]
 }
 
@@ -61,38 +61,42 @@ model Taste {
   remark         String?
   foodCategoryId Int
   status         String           @default("use")
-  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id])
+  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id],onDelete: Cascade)
   SaleTempDetail SaleTempDetail[]
 }
 
 model Food {
-  id             Int              @id() @default(autoincrement())
-  name           String
-  img            String?
-  remark         String?
-  status         String           @default("use")
-  price          Int
-  foodCategory   String           @default("food") //food, drink
-  FoodCategoryId Int
-  FoodCategories FoodCategories   @relation(fields: [FoodCategoryId], references: [id])
-  SaleTempDetail SaleTempDetail[]
+  id              Int              @id() @default(autoincrement())
+  name            String
+  img             String?
+  remark          String?
+  status          String           @default("use")
+  price           Int
+  foodCategory    String           @default("food") //food, drink
+  FoodCategoryId  Int
+  FoodCategories  FoodCategories   @relation(fields: [FoodCategoryId], references: [id],onDelete: Cascade)
+  SaleTempDetails SaleTempDetail[]
+  SaleTemps       SaleTemp[]
 }
 
 model SaleTemp {
-  id             Int              @id @default(autoincrement())
-  userId         Int
-  tableNumber    Int
-  SaleTempDetails SaleTempDetail[]
+  id              Int              @id @default(autoincrement())
+  userId          Int
+  tableNumber     Int
+  foodId          Int              
+  qty             Int              @default(1)
+  SaleTempDetails SaleTempDetail[] 
+  Food            Food             @relation(fields: [foodId], references: [id],onDelete: Cascade)
 }
 
 model SaleTempDetail {
-  id         Int      @id() @default(autoincrement())
+  id         Int       @id() @default(autoincrement())
   saleTempId Int
   foodId     Int
   tasteId    Int?
   foodSizeId Int?
-  Food       Food     @relation(fields: [foodId], references: [id])
-  Taste      Taste?   @relation(fields: [tasteId], references: [id])
-  FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id])
-  SaleTemp   SaleTemp @relation(fields: [saleTempId], references: [id])
+  Food       Food      @relation(fields: [foodId], references: [id],onDelete: Cascade)
+  Taste      Taste?    @relation(fields: [tasteId], references: [id],onDelete: SetNull)
+  FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id],onDelete: SetNull)
+  SaleTemp   SaleTemp  @relation(fields: [saleTempId], references: [id], onDelete: Cascade)
 }

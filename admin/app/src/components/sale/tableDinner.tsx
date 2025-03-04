@@ -29,20 +29,20 @@ export interface SaleTemps {
   id: number;
   userId: number;
   tableNumber: number;
-  SaleTempDetails: [
+  SaleTempDetails: SaleTempDetail[];
+}
+
+export interface SaleTempDetail {
+  id: number;
+  saleTempId: number;
+  foodId: number;
+  tasteId: number;
+  foodSizeId: number;
+  Food: [
     {
       id: number;
-      saleTempId: number;
-      foodId: number;
-      tasteId: number;
-      foodSizeId: number;
-      Food: [
-        {
-          id: number;
-          name: string;
-          price: number;
-        }
-      ];
+      name: string;
+      price: number;
     }
   ];
 }
@@ -107,6 +107,35 @@ export default function TableDinner() {
     }
   };
 
+  const handleClearAllSaleTemps = async () => {
+    try {
+      const button = await Swal.fire({
+        title: "Are you sure you want to clear all items?",
+        icon: "warning",
+        showCancelButton: true,
+        showConfirmButton: "Yes, clear all",
+      });
+
+      if (button.isConfirmed) {
+        const payload = {
+          tableNumber: tableDinner,
+          userId: Number(localStorage.getItem("posUserId")),
+        };
+
+        await axios.delete(`${config.apiServer}/api/saleTemp/removeAll`, {
+          data: payload,
+        });
+        fetchDataSaleTemp();
+      }
+    } catch (error: any) {
+      Swal.fire({
+        title: "Error Removing SaleTemp",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
   return (
     <div className="max-w-screen-xl mx-auto">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-5 space-y-4 sm:space-y-0">
@@ -156,7 +185,10 @@ export default function TableDinner() {
               Both
             </Badge>
           </button>
-          <button>
+          <button
+            onClick={() => handleClearAllSaleTemps()}
+            disabled={saleTemps.length === 0}
+          >
             <Badge
               variant="solid"
               color="error"
@@ -169,16 +201,19 @@ export default function TableDinner() {
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="w-full md:w-3/4 bg-white dark:bg-black shadow-md p-4 rounded-lg">
+      <div className="flex flex-col lg:flex-row gap-4">
+        <div className="w-full lg:w-3/4 bg-white dark:bg-black shadow-md p-4 rounded-lg">
           <TableFoods
             foods={foods}
             tableDinner={tableDinner}
             fetchDataSaleTemp={fetchDataSaleTemp}
           />
         </div>
-        <div className="w-full md:w-1/4 bg-white dark:bg-black shadow-md p-4 rounded-lg">
-          <TotalPrice saleTemps={saleTemps} />
+        <div className="w-full lg:w-1/4 bg-white dark:bg-black shadow-md p-4 rounded-lg">
+          <TotalPrice
+            saleTemps={saleTemps}
+            fetchDataSaleTemp={fetchDataSaleTemp}
+          />
         </div>
       </div>
     </div>
