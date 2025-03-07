@@ -1,4 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
+const e = require("cors");
 const prisma = new PrismaClient();
 
 module.exports = {
@@ -129,6 +130,66 @@ module.exports = {
         },
       });
       return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  generateSaleTempDetail: async (req, res) => {
+    try {
+      const saleTemp = await prisma.saleTemp.findFirst({
+        where: {
+          id: req.body.saleTempId,
+        },
+        include: {
+          SaleTempDetails: true,
+        },
+      });
+      if (saleTemp.SaleTempDetails.length === 0) {
+        for (let i = 0; i < saleTemp.qty; i++) {
+          await prisma.saleTempDetail.create({
+            data: {
+              saleTempId: saleTemp.id,
+              foodId: saleTemp.foodId,
+            },
+          });
+        }
+      }
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  info: async (req, res) => {
+    try {
+      const saleTemp = await prisma.saleTemp.findFirst({
+        where: {
+          id: parseInt(req.params.id),
+        },
+        include: {
+          Food: {
+            include: {
+              FoodCategories: {
+                include: {
+                  Tastes: {
+                    where: {
+                      status: "use",
+                    },
+                  },
+                  FoodSizes: {
+                    where: {
+                      status: "use",
+                    },
+                    orderBy: {
+                      moneyAdded: "asc",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+      return res.send({ results : saleTemp });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

@@ -85,6 +85,12 @@ app.delete("/api/saleTemp/removeAll", (req, res) =>
 app.put("/api/saleTemp/updateQty", (req, res) =>
   SaleTempController.updateQty(req, res)
 );
+app.post("/api/saleTemp/generateSaleTempDetail", (req, res) =>
+  SaleTempController.generateSaleTempDetail(req, res)
+);
+app.get("/api/saleTemp/info/:id", (req, res) =>
+  SaleTempController.info(req, res)
+);
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");

@@ -9,6 +9,16 @@ import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
 import Swal from "sweetalert2";
 import axios from "axios";
 import config from "@/config";
+import { Modal } from "../ui/modal";
+import { useModal } from "@/hooks/useModal";
+import { PlusIcon } from "@/icons";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "../ui/table";
 
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
@@ -21,13 +31,14 @@ export default function TotalPrice({
 }: TotalPriceProps) {
   const [saleTempDetails, setSaleTempDetails] = useState<any[]>([]);
   const [amount, setAmount] = useState(0);
+  const { isOpen, openModal, closeModal } = useModal();
+  const [tastes, setTastes] = useState("");
+  const [sizes, setSizes] = useState("");
 
   useEffect(() => {
-    if (saleTemps.length > 0) {
-      setSaleTempDetails(saleTemps[0]?.SaleTempDetails ?? []);
-    }
     sumAmount(saleTemps);
-  }, [saleTemps]);
+    console.log("Updated SaleTempDetails:", saleTempDetails);
+  }, [saleTemps, saleTempDetails]);
 
   const removeSaleTemp = async (id: number) => {
     try {
@@ -76,6 +87,65 @@ export default function TotalPrice({
     });
 
     return setAmount(total);
+  };
+
+  const handleEdit = async (item: any) => {
+    try {
+      await generateSaleTempDetail(item.id);
+      await fetchDataSaleTempInfo(item.id);
+      openModal();
+    } catch (error: any) {
+      Swal.fire({ title: "Error", text: error.message, icon: "error" });
+    }
+  };
+
+  const generateSaleTempDetail = async (saleTempId: number) => {
+    try {
+      const payload = {
+        saleTempId: saleTempId,
+      };
+
+      await axios.post(
+        `${config.apiServer}/api/saleTemp/generateSaleTempDetail`,
+        payload
+      );
+      await fetchDataSaleTemp();
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        title: "Error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const fetchDataSaleTempInfo = async (saleTempId: number) => {
+    try {
+      const res = await axios.get(
+        `${config.apiServer}/api/saleTemp/info/${saleTempId}`
+      );
+
+      const data = res.data.results;
+
+      console.log("data is", data);
+
+      if (data) {
+        setSaleTempDetails([data]);
+        setTastes(data.Food?.FoodCategories?.Tastes || []);
+        setSizes(data.Food?.FoodCategories?.FoodSizes || []);
+      } else {
+        setSaleTempDetails([]);
+        setTastes([]);
+        setSizes([]);
+      }
+    } catch (error: any) {
+      Swal.fire({
+        title: "Error",
+        text: error.message,
+        icon: "error",
+      });
+    }
   };
 
   return (
@@ -130,7 +200,12 @@ export default function TotalPrice({
                 >
                   Cancel
                 </button>
-                <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">
+                <button
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                  onClick={() => {
+                    handleEdit(item);
+                  }}
+                >
                   Edit
                 </button>
               </div>
@@ -138,6 +213,117 @@ export default function TotalPrice({
           ))
         )}
       </div>
+
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="modal-container max-w-[700px] m-4"
+      >
+        <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Edit food details
+            </h4>
+          </div>
+
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+            <div>
+              <Button
+                size="md"
+                variant="primary"
+                startIcon={<PlusIcon />}
+                onClick={() => openModal()}
+              >
+                Add food list
+              </Button>
+            </div>
+            <div className="table-container">
+              <Table>
+                {/* Table Header */}
+                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                  <TableRow>
+                    <TableCell
+                      isHeader
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                    >
+                      Food name
+                    </TableCell>
+                    <TableCell
+                      isHeader
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                    >
+                      Taste
+                    </TableCell>
+                    <TableCell
+                      isHeader
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                    >
+                      Size
+                    </TableCell>
+                  </TableRow>
+                </TableHeader>
+
+                {/* Table Body */}
+                <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                  {saleTempDetails.length > 0 ? (
+                    saleTempDetails.map((detail: any) => (
+                      <TableRow key={detail.id}>
+                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                          {detail.Food?.name || "-"}
+                        </TableCell>
+
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {tastes.length > 0
+                            ? tastes.map((taste: any) => (
+                                <button
+                                  key={taste.id}
+                                  className="p-1 bg-gray-200 rounded-md m-1"
+                                >
+                                  {taste.name}
+                                </button>
+                              ))
+                            : "-"}
+                        </TableCell>
+
+                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
+                          {sizes.length > 0
+                            ? sizes.map((size: any) => (
+                                <button
+                                  key={size.id}
+                                  className="p-1 bg-gray-200 rounded-md m-1"
+                                >
+                                  {size.name}
+                                </button>
+                              ))
+                            : "-"}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className="text-center text-gray-500 py-4"
+                      >
+                        No items available.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+            <Button size="sm" variant="outline" onClick={closeModal}>
+              Close
+            </Button>
+            <Button size="sm" type="submit">
+              Save
+            </Button>
+          </div>
+          
+        </div>
+      </Modal>
     </div>
   );
 }
