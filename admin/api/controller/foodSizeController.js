@@ -13,14 +13,14 @@ module.exports = {
         },
       });
 
-      return res.send({ message: "success" });
+      return res.send({ message : "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
   },
   list: async (req, res) => {
     try {
-      const result = await prisma.foodSize.findMany({
+      const results = await prisma.foodSize.findMany({
         include: {
           FoodCategories: true,
         },
@@ -31,7 +31,7 @@ module.exports = {
           id: "desc",
         },
       });
-      return res.send({ result: result });
+      return res.send({ results : results });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

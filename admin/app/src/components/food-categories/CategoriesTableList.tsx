@@ -18,7 +18,7 @@ export interface FoodCategory {
 
 
 export default function CategoriesTableList() {
-  const [foodCategories, setFoodCategories] = useState<FoodCategory>([]);
+  const [foodCategories, setFoodCategories] = useState<FoodCategory[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchDataFoodCategories = async () => {
@@ -27,7 +27,7 @@ export default function CategoriesTableList() {
           `${config.apiServer}/api/foodCategories/list`
         );
   
-        setFoodCategories(res.data.result);
+        setFoodCategories(res.data.results);
       } catch (error) {
         Swal.fire({
           title: "Error!",
@@ -54,7 +54,7 @@ export default function CategoriesTableList() {
     </div>
 
     <ComponentCard title="Food categories table" className="mt-5">
-      <BasicTable foodCategories={foodCategories} fetchData={fetchDataFoodCategories} />
+      <BasicTable foodCategories={foodCategories || []} fetchData={fetchDataFoodCategories} />
     </ComponentCard>
   </div>
   );

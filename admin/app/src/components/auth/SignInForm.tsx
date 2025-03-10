@@ -25,38 +25,46 @@ export default function SignInForm() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const signIn = async () => {
+    if (loading) {
+      return;
+    }
+    setLoading(true);
+
+    if (!username || !password) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Input Required",
+        message: "Please provide both username and password.",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const payload = {
         username: username,
         password: password,
       };
 
-      if (!username || !password) {
-        setAlert({
-          show: true,
-          variant: "warning",
-          title: "Input Required",
-          message: "Please provide both username and password.",
-        });
-        return;
-      }
-
       const res = await axios.post(
         `${config.apiServer}/api/user/signIn`,
         payload
       );
+      console.log(res);
+      
 
       if (res.data.token !== undefined) {
         localStorage.setItem(config.token, res.data.token);
-        localStorage.setItem("posName", res.data.name);
+        localStorage.setItem("posFirstName", res.data.fname);
+        localStorage.setItem("posLastName", res.data.lname);
         localStorage.setItem("posUserId", res.data.id);
         localStorage.setItem("posUserLevel", res.data.level);
         localStorage.setItem("posUserName", res.data.username);
         localStorage.setItem("posEmail", res.data.email);
-        localStorage.setItem("posFName", res.data.fname);
-        localStorage.setItem("posLName", res.data.lname);
         localStorage.setItem("posPhone", res.data.phone);
         router.push("/");
       } else {
@@ -67,25 +75,19 @@ export default function SignInForm() {
           message: "Email or password invalid",
         });
       }
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        const customMessage = error.message.includes("401")
-          ? "invalid username or password"
-          : error.message;
-        setAlert({
-          show: true,
-          variant: "error",
-          title: "Error message",
-          message: customMessage,
-        });
-      } else {
-        setAlert({
-          show: true,
-          variant: "error",
-          title: "Error message",
-          message: "An unknown error occurred",
-        });
-      }
+    } catch (error: any) {
+      const customMessage =
+        error.response?.status === 401
+          ? "Invalid username or password"
+          : error.response?.data?.message || "Something went wrong!";
+      setAlert({
+        show: true,
+        variant: "error",
+        title: "Error",
+        message: customMessage,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -180,7 +182,6 @@ export default function SignInForm() {
                     onChange={(e) => setUsername(e.target.value)}
                     value={username}
                   />
-                 
                 </div>
                 <div>
                   <Label>
@@ -193,7 +194,6 @@ export default function SignInForm() {
                       onChange={(e) => setPassword(e.target.value)}
                       value={password}
                     />
-                    
 
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -222,8 +222,13 @@ export default function SignInForm() {
                   </Link>
                 </div>
                 <div>
-                  <Button className="w-full" size="sm" type="submit">
-                    Sign in
+                  <Button
+                    className="w-full"
+                    size="sm"
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Signing in..." : "Sign in"}
                   </Button>
                 </div>
               </div>

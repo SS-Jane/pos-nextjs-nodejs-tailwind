@@ -5,10 +5,132 @@ import Label from "@/components/form/Label";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState } from "react";
+import Swal from "sweetalert2";
+import config from "../../config";
+import axios from "axios";
+import Alert from "../ui/alert/Alert";
+import { useRouter } from "next/navigation";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [alert, setAlert] = useState({
+    show: false,
+    variant: "info" as "warning" | "error" | "success" | "info",
+    title: "",
+    message: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const validateForm = (): boolean => {
+    if (!firstName.trim() || !lastName.trim()) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation Error",
+        message: "First and last names are required!",
+      });
+      return false;
+    }
+    if (!userName.trim()) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation Error",
+        message: "Username is required!",
+      });
+      return false;
+    }
+    if (!email.includes("@")) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation Error",
+        message: "Enter a valid email address!",
+      });
+      return false;
+    }
+    if (password.length < 6) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation Error",
+        message: "Password must be at least 6 characters!",
+      });
+      return false;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation Error",
+        message: "Phone number must be 10 digits!",
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const signUp = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        firstName: firstName,
+        lastName: lastName,
+        userName: userName,
+        email: email,
+        password: password,
+        phone: phone,
+      };
+
+      const res = await axios.post(
+        `${config.apiServer}/api/user/signUp`,
+        payload
+      );
+      if (res.data.message === "success") {
+        Swal.fire({
+          title: "Sign-Up Successful",
+          text: "Your account has been created!",
+          icon: "success",
+        });
+        clearForm();
+        router.push("/signin");
+      } else {
+        Swal.fire({
+          title: "Error",
+          text: res.data.message || "Sign-up failed!",
+          icon: "error",
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        title: "Error",
+        text: error.response?.data?.message || "Something went wrong!",
+        icon: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearForm = () => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setUserName("");
+    setPassword("");
+    setPhone("");
+  };
   return (
     <div className="flex flex-col flex-1 p-6 rounded-2xl sm:rounded-none sm:border-0 sm:p-8">
       <div className="w-full max-w-md pt-5 mx-auto sm:py-10">
@@ -97,7 +219,12 @@ export default function SignUpForm() {
               </span>
             </div>
           </div>
-          <form>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              signUp();
+            }}
+          >
             <div className="space-y-5">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                 {/* <!-- First Name --> */}
@@ -110,6 +237,7 @@ export default function SignUpForm() {
                     id="fname"
                     name="fname"
                     placeholder="Enter your first name"
+                    onChange={(e) => setFirstName(e.target.value)}
                   />
                 </div>
                 {/* <!-- Last Name --> */}
@@ -122,6 +250,7 @@ export default function SignUpForm() {
                     id="lname"
                     name="lname"
                     placeholder="Enter your last name"
+                    onChange={(e) => setLastName(e.target.value)}
                   />
                 </div>
               </div>
@@ -135,6 +264,33 @@ export default function SignUpForm() {
                   id="email"
                   name="email"
                   placeholder="Enter your email"
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              {/* <!-- Phone --> */}
+              <div>
+                <Label>
+                  Phone<span className="text-error-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="phone"
+                  name="phone"
+                  placeholder="Enter your phone number"
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              {/* <!-- Username --> */}
+              <div>
+                <Label>
+                  Username<span className="text-error-500">*</span>
+                </Label>
+                <Input
+                  type="text"
+                  id="username"
+                  name="username"
+                  placeholder="Enter your Username"
+                  onChange={(e) => setUserName(e.target.value)}
                 />
               </div>
               {/* <!-- Password --> */}
@@ -146,6 +302,7 @@ export default function SignUpForm() {
                   <Input
                     placeholder="Enter your password"
                     type={showPassword ? "text" : "password"}
+                    onChange={(e) => setPassword(e.target.value)}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -179,8 +336,11 @@ export default function SignUpForm() {
               </div>
               {/* <!-- Button --> */}
               <div>
-                <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                  Sign Up
+                <button
+                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
+                  type="submit"
+                >
+                  {loading ? "Signing Up..." : "Sign Up"}
                 </button>
               </div>
             </div>
@@ -195,6 +355,15 @@ export default function SignUpForm() {
                 Sign In
               </Link>
             </p>
+          </div>
+          <div className="mt-5">
+            {alert.show && (
+              <Alert
+                variant={alert.variant}
+                title={alert.title}
+                message={alert.message}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -63,7 +63,7 @@ export default function BasicTable({
       });
       return false;
     }
-    if (moneyAdd === null || isNaN(moneyAdd)) {
+    if (moneyAdd === null) {
       setAlert({
         show: true,
         variant: "warning",
@@ -92,16 +92,18 @@ export default function BasicTable({
       });
 
       if (button.isConfirmed) {
-        await axios.delete(
+        const res = await axios.delete(
           `${config.apiServer}/api/foodSizes/remove/${item.id}`
         );
-        Swal.fire({
-          title: "Remove Food Sizes",
-          html: `
-              Remove Food Sizes <span class="text-red-500">${item.name}</span> success
-           `,
-          icon: "success",
-        });
+        if (res.data.message === "success") {
+          Swal.fire({
+            title: "Remove Food Sizes",
+            html: `
+                Remove Food Sizes <span class="text-red-500">${item.name}</span> success
+             `,
+            icon: "success",
+          });
+        }
       }
       setTimeout(() => {
         fetchDataFoodSizes();
@@ -109,7 +111,7 @@ export default function BasicTable({
     } catch (error: any) {
       Swal.fire({
         title: "Error!",
-        text: error.messages,
+        text: error.message,
         icon: "error",
       });
     }
@@ -134,7 +136,7 @@ export default function BasicTable({
           `${config.apiServer}/api/foodSizes/create`,
           payload
         );
-        if (res.data.messages === "success") {
+        if (res.data.message === "success") {
           Swal.fire({
             target: document.querySelector(".modal-container"),
             title: "Add Food size",
@@ -143,26 +145,31 @@ export default function BasicTable({
              `,
             icon: "success",
           });
-          clearForm();
+          setTimeout(() => {
+            clearForm();
+            closeModal();
+            fetchDataFoodSizes();
+          }, 2000);
         }
       } else {
-        const res = await axios.put(`${config.apiServer}/api/foodSizes/update`, payload);
-        if (res.data.messages === "success") {
-          
-        Swal.fire({
-          target: document.querySelector(".modal-container"),
-          title: "Edit Food Categories",
-          html: `Add Food Categories <span class="text-green-500">${foodSizeName}</span> and <span class="text-green-500">${foodSizeRemark}</span> success`,
-          icon: "success",
-        });
-      }
-      setTimeout(() => {
-        clearForm()
-        closeModal();
-        fetchDataFoodSizes();
-      }, 2000);
+        const res = await axios.put(
+          `${config.apiServer}/api/foodSizes/update`,
+          payload
+        );
+        if (res.data.message === "success") {
+          Swal.fire({
+            target: document.querySelector(".modal-container"),
+            title: "Edit Food Categories",
+            html: `Add Food Categories <span class="text-green-500">${foodSizeName}</span> success`,
+            icon: "success",
+          });
         }
-        
+        setTimeout(() => {
+          clearForm();
+          closeModal();
+          fetchDataFoodSizes();
+        }, 2000);
+      }
     } catch (error: unknown) {
       Swal.fire({
         target: document.querySelector(".modal-container"),
@@ -186,7 +193,7 @@ export default function BasicTable({
     setFoodSizeId(0);
     setFoodSizeName("");
     setFoodSizeRemark("");
-    setMoneyAdd(0)
+    setMoneyAdd(0);
   };
 
   return (

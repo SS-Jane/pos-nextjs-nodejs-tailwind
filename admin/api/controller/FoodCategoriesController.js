@@ -16,7 +16,7 @@ module.exports = {
         },
       });
 
-      return res.send({ message: "success" });
+      return res.send({ message : "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
@@ -31,7 +31,7 @@ module.exports = {
           id: "desc",
         },
       });
-      return res.send({ result: rows });
+      return res.send({ results : rows });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
@@ -46,7 +46,7 @@ module.exports = {
           id: parseInt(req.params.id),
         },
       });
-      return res.send({ message: "success" });
+      return res.send({ message : "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
