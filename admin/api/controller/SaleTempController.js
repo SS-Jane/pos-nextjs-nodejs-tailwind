@@ -189,7 +189,22 @@ module.exports = {
           },
         },
       });
-      return res.send({ results : saleTemp });
+      return res.send({ results: saleTemp });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  selectTaste: async (req, res) => {
+    try {
+      await prisma.saleTemp.update({
+        where: {
+          id: req.body.saleTempDetailId,
+        },
+        data: {
+          tasteId: req.body.tasteId,
+        },
+      });
+      return req.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }
