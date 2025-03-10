@@ -113,4 +113,23 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
+  filter: async (req, res) => {
+    try {
+      let condition = {
+        status: "use",
+      };
+      if (req.params.foodCategory != "all") {
+        condition.foodCategory = req.params.foodCategory;
+      }
+      const foods = await prisma.food.findMany({
+        where: condition,
+        orderBy: {
+          name: "asc",
+        },
+      });
+      return res.send({ results: foods });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
 };

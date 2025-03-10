@@ -54,6 +54,8 @@ export default function SignInForm() {
         `${config.apiServer}/api/user/signIn`,
         payload
       );
+      console.log(res);
+      
 
       if (res.data.token !== undefined) {
         localStorage.setItem(config.token, res.data.token);
