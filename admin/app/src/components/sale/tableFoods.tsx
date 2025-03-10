@@ -8,10 +8,15 @@ import axios from "axios";
 
 interface TableFoodsProps {
   foods: Foods[];
-  tableDinner : number,
+  tableDinner: number;
+  fetchDataSaleTemp: () => Promise<void>;
 }
 
-export default function TableFoods({ foods,tableDinner }: TableFoodsProps) {
+export default function TableFoods({
+  foods,
+  tableDinner,
+  fetchDataSaleTemp,
+}: TableFoodsProps) {
   const imgSrc = (item: any) => {
     return item.img
       ? `${config.apiServer}/uploads/${item.img}`
@@ -27,6 +32,7 @@ export default function TableFoods({ foods,tableDinner }: TableFoodsProps) {
       };
 
       await axios.post(`${config.apiServer}/api/saleTemp/create`, payload);
+      fetchDataSaleTemp();
     } catch (error: any) {
       Swal.fire({
         title: "Error",
@@ -37,22 +43,32 @@ export default function TableFoods({ foods,tableDinner }: TableFoodsProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-5 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {foods.map((food) => (
-        <div className="card border rounded-lg shadow-md p-4" key={food.id}>
-          <Image
-            src={imgSrc(food)}
-            alt={food.name}
-            width={400}
-            height={300}
-            className="w-full h-auto object-cover rounded-lg"
-            onClick={e => sale(food.id)}
-          />
-          <div className="card-body mt-3">
-            <h5 className="text-lg font-semibold dark:text-white">
+        <div
+          className="relative flex flex-col items-center bg-white dark:bg-gray-800 border rounded-lg shadow-md p-3 transition-transform transform hover:scale-105 cursor-pointer"
+          key={food.id}
+          onClick={() => sale(food.id)}
+        >
+          <div className="relative w-full h-36 sm:h-40 md:h-44">
+            <Image
+              src={imgSrc(food)}
+              alt={food.name}
+              fill
+              className="rounded-lg object-cover"
+            />
+          </div>
+
+          <div className="w-full mt-3 text-center">
+            <h5 className="text-lg font-semibold text-gray-900 dark:text-white">
               {food.name}
             </h5>
-            <p className="text-gray-500">฿{food.price}</p>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">
+              ฿{food.price}
+            </p>
+          </div>
+          <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 text-xs rounded-md hidden">
+            Added
           </div>
         </div>
       ))}
