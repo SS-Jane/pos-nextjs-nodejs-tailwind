@@ -148,6 +148,24 @@ export default function TotalPrice({
     }
   };
 
+  const selectTaste =async (tasteId:number, saleTempDetailId: number, saleTempId : number) => {
+    try {
+      const payload = {
+        tasteId : tasteId,
+        saleTempDetailId : saleTempDetailId
+      }
+
+      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`,payload);
+      fetchDataSaleTempInfo(saleTempId)
+    } catch (error : any) {
+      Swal.fire({
+        title : 'error',
+        text : error.message,
+        icon : 'error'
+      })
+    }
+  }
+
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
       <div className="bg-white dark:bg-black text-black dark:text-white font-semibold text-right p-4 rounded-lg text-2xl">
@@ -278,7 +296,7 @@ export default function TotalPrice({
                                 <button
                                   key={taste.id}
                                   className="p-1 bg-gray-200 rounded-md m-1"
-                                >
+                                onClick={e => selectTaste(taste.id,item.id,item.saleTempId)}>
                                   {taste.name}
                                 </button>
                               ))
