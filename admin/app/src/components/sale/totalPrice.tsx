@@ -301,28 +301,22 @@ export default function TotalPrice({
                           {detail.Food?.name || "-"}
                         </TableCell>
 
-                        <TableCell className="px-4 py-3  text-start">
+                        <TableCell className="px-4 py-3 text-start">
                           {tastes.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
-                              {tastes.map((taste: any) =>
-                                detail.tasteId === taste.id ? (
+                              {tastes.map((taste: any) => {
+                                const isSelected = detail.tasteId === taste.id;
+
+                                return (
                                   <button
                                     key={taste.id}
-                                    className="flex item-center px-2 py-1 border-3 rounded-md border-brand-500 dark:border-brand-400"
-                                  >
-                                    <Badge
-                                      variant="light"
-                                      size="sm"
-                                      color="primary"
-                                    >
-                                      {taste.name}
-                                    </Badge>
-                                  </button>
-                                ) : (
-                                  <button
-                                    key={taste.id}
-                                    className="flex item-center px-2 py-1 border-2 border-gray-500 rounded-md hover:border-brand-500 dark:hover:border-brand-400"
-                                    onClick={(e) =>
+                                    className={`flex items-center px-2 py-1 rounded-md ${
+                                      isSelected
+                                        ? "border-3 border-red-500 dark:border-red-400 "
+                                        : "border-2 border-gray-500 hover:border-brand-500 dark:hover:border-brand-400"
+                                    }`}
+                                    onClick={() =>
+                                      !isSelected &&
                                       selectTaste(taste.id, detail.id)
                                     }
                                   >
@@ -334,8 +328,8 @@ export default function TotalPrice({
                                       {taste.name}
                                     </Badge>
                                   </button>
-                                )
-                              )}
+                                );
+                              })}
                             </div>
                           ) : (
                             "-"
