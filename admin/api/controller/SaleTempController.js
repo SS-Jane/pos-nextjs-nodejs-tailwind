@@ -144,6 +144,7 @@ module.exports = {
           SaleTempDetails: true,
         },
       });
+
       if (saleTemp.SaleTempDetails.length === 0) {
         for (let i = 0; i < saleTemp.qty; i++) {
           await prisma.saleTempDetail.create({
@@ -154,6 +155,7 @@ module.exports = {
           });
         }
       }
+      
       return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
@@ -187,6 +189,15 @@ module.exports = {
               },
             },
           },
+          SaleTempDetails : {
+            include : {
+              Food : true,
+              FoodSize : true,
+            },
+            orderBy : {
+              id : 'asc'
+            }
+          }
         },
       });
       return res.send({ results: saleTemp });
@@ -196,7 +207,7 @@ module.exports = {
   },
   selectTaste: async (req, res) => {
     try {
-      await prisma.saleTemp.update({
+      await prisma.saleTempDetail.update({
         where: {
           id: req.body.saleTempDetailId,
         },
@@ -204,7 +215,7 @@ module.exports = {
           tasteId: req.body.tasteId,
         },
       });
-      return req.send({ message: "success" });
+      return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

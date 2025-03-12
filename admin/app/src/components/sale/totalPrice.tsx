@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import Badge from "../ui/badge/Badge";
 
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
@@ -34,6 +35,7 @@ export default function TotalPrice({
   const { isOpen, openModal, closeModal } = useModal();
   const [tastes, setTastes] = useState("");
   const [sizes, setSizes] = useState("");
+  const [selectSaleTempId, setSelectSaleTempId] = useState<number | null>(null);
 
   useEffect(() => {
     sumAmount(saleTemps);
@@ -91,6 +93,7 @@ export default function TotalPrice({
 
   const handleEdit = async (item: any) => {
     try {
+      setSelectSaleTempId(item.id);
       await generateSaleTempDetail(item.id);
       await fetchDataSaleTempInfo(item.id);
       openModal();
@@ -128,10 +131,10 @@ export default function TotalPrice({
 
       const data = res.data.results;
 
-      console.log("data is", data);
+      console.log("API Response:", data); // 🔍 Debug API response
 
       if (data) {
-        setSaleTempDetails([data]);
+        setSaleTempDetails(data.SaleTempDetails || []);
         setTastes(data.Food?.FoodCategories?.Tastes || []);
         setSizes(data.Food?.FoodCategories?.FoodSizes || []);
       } else {
@@ -141,6 +144,7 @@ export default function TotalPrice({
       }
     } catch (error: any) {
       Swal.fire({
+        target: document.querySelector(".modal-container"),
         title: "Error",
         text: error.message,
         icon: "error",
@@ -148,23 +152,26 @@ export default function TotalPrice({
     }
   };
 
-  const selectTaste =async (tasteId:number, saleTempDetailId: number, saleTempId : number) => {
+  const selectTaste = async (tasteId: number, saleTempDetailId: number) => {
     try {
       const payload = {
-        tasteId : tasteId,
-        saleTempDetailId : saleTempDetailId
-      }
+        tasteId: tasteId,
+        saleTempDetailId: saleTempDetailId,
+      };
 
-      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`,payload);
-      fetchDataSaleTempInfo(saleTempId)
-    } catch (error : any) {
+      console.log("saleTempId", selectSaleTempId);
+
+      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`, payload);
+      fetchDataSaleTempInfo(selectSaleTempId);
+    } catch (error: any) {
       Swal.fire({
-        title : 'error',
-        text : error.message,
-        icon : 'error'
-      })
+        target: document.querySelector(".modal-container"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
     }
-  }
+  };
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
@@ -194,7 +201,7 @@ export default function TotalPrice({
                 <Button
                   size="sm"
                   onClick={() => updateQty(item.id, item.qty - 1)}
-                  disabled={item.qty === 0}
+                  disabled={item.qty === 0 && item.saleTempDetails?.length > 0}
                 >
                   <FontAwesomeIcon icon={faMinus} />
                 </Button>
@@ -206,6 +213,7 @@ export default function TotalPrice({
                 <Button
                   size="sm"
                   onClick={() => updateQty(item.id, item.qty + 1)}
+                  disabled={item.saleTempDetails?.length > 0}
                 >
                   <FontAwesomeIcon icon={faPlus} />
                 </Button>
@@ -235,16 +243,16 @@ export default function TotalPrice({
       <Modal
         isOpen={isOpen}
         onClose={closeModal}
-        className="modal-container max-w-[700px] m-4"
+        className="modal-container max-w-full sm:max-w-[700px] md:max-w-[1000px]  mx-auto p-2 sm:p-4"
       >
-        <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
+        <div className="relative w-full p-4 sm:p-6 lg:p-8 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900">
+          <div className="border-b px-2 pr-14 pb-3">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Edit food details
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+          <div className="mt-4 flex flex-col">
             <div>
               <Button
                 size="md"
@@ -255,26 +263,26 @@ export default function TotalPrice({
                 Add food list
               </Button>
             </div>
-            <div className="table-container">
-              <Table>
+            <div className="table-container mt-4 overflow-auto">
+              <Table className="w-full min-w-[300px] border rounded-lg">
                 {/* Table Header */}
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                <TableHeader className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Food name
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Taste
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Size
                     </TableCell>
@@ -283,37 +291,78 @@ export default function TotalPrice({
 
                 {/* Table Body */}
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {saleTempDetails.length > 0 ? (
+                  {saleTempDetails?.length > 0 ? (
                     saleTempDetails.map((detail: any) => (
-                      <TableRow key={detail.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                      <TableRow
+                        key={detail.id}
+                        className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <TableCell className="px-6 py-4 sm:px-7 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {detail.Food?.name || "-"}
                         </TableCell>
 
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {tastes.length > 0
-                            ? tastes.map((taste: any) => (
-                                <button
-                                  key={taste.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
-                                onClick={e => selectTaste(taste.id,item.id,item.saleTempId)}>
-                                  {taste.name}
-                                </button>
-                              ))
-                            : "-"}
+                        <TableCell className="px-4 py-3  text-start">
+                          {tastes.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {tastes.map((taste: any) =>
+                                detail.tasteId === taste.id ? (
+                                  <button
+                                    key={taste.id}
+                                    className="flex item-center px-2 py-1 border-3 rounded-md border-brand-500 dark:border-brand-400"
+                                  >
+                                    <Badge
+                                      variant="light"
+                                      size="sm"
+                                      color="primary"
+                                    >
+                                      {taste.name}
+                                    </Badge>
+                                  </button>
+                                ) : (
+                                  <button
+                                    key={taste.id}
+                                    className="flex item-center px-2 py-1 border-2 border-gray-500 rounded-md hover:border-brand-500 dark:hover:border-brand-400"
+                                    onClick={(e) =>
+                                      selectTaste(taste.id, detail.id)
+                                    }
+                                  >
+                                    <Badge
+                                      variant="light"
+                                      size="sm"
+                                      color="primary"
+                                    >
+                                      {taste.name}
+                                    </Badge>
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
 
-                        <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {sizes.length > 0
-                            ? sizes.map((size: any) => (
+                        <TableCell className="p-3 text-start ">
+                          {sizes.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {sizes.map((size: any) => (
                                 <button
                                   key={size.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
+                                  className="flex item-center px-2 py-1 border-2 border-gray-500 rounded-md hover:border-success-600 dark:hover:border-success-500"
                                 >
-                                  {size.name}
+                                  <Badge
+                                    variant="light"
+                                    size="sm"
+                                    color="success"
+                                  >
+                                    {size.name}
+                                  </Badge>
                                 </button>
-                              ))
-                            : "-"}
+                              ))}
+                            </div>
+                          ) : (
+                            "-"
+                          )}
                         </TableCell>
                       </TableRow>
                     ))
@@ -339,7 +388,6 @@ export default function TotalPrice({
               Save
             </Button>
           </div>
-          
         </div>
       </Modal>
     </div>
