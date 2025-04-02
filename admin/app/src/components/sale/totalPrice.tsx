@@ -128,10 +128,8 @@ export default function TotalPrice({
 
       const data = res.data.results;
 
-      console.log("data is", data);
-
       if (data) {
-        setSaleTempDetails([data]);
+        setSaleTempDetails(data.SaleTempDetails || []);
         setTastes(data.Food?.FoodCategories?.Tastes || []);
         setSizes(data.Food?.FoodCategories?.FoodSizes || []);
       } else {
@@ -139,6 +137,7 @@ export default function TotalPrice({
         setTastes([]);
         setSizes([]);
       }
+
     } catch (error: any) {
       Swal.fire({
         title: "Error",
@@ -148,20 +147,44 @@ export default function TotalPrice({
     }
   };
 
-  const selectTaste =async (tasteId:number, saleTempDetailId: number, saleTempId : number) => {
+  const selectTaste = async (
+    tasteId: number,
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
     try {
       const payload = {
-        tasteId : tasteId,
-        saleTempDetailId : saleTempDetailId
+        tasteId: tasteId,
+        saleTempDetailId: saleTempDetailId,
+      };
+
+      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`, payload);
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const unSelectTaste = async (saleTempDetailId : number,saleTempId : number) => {
+    try {
+      const payload = {
+        saleTempDetailId: saleTempDetailId
       }
 
-      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`,payload);
-      fetchDataSaleTempInfo(saleTempId)
-    } catch (error : any) {
-      Swal.fire({
-        title : 'error',
+      await axios.put(`${config.apiServer}/api/saleTemp/unSelectTaste`, payload);
+      fetchDataSaleTempInfo(saleTempId);
+      
+    } catch (error) {
+      Swal.firs({
+        target : document.querySelector(".model-edit-food"),
+        title : "error",
         text : error.message,
-        icon : 'error'
+        icon : "error",
       })
     }
   }
@@ -235,7 +258,7 @@ export default function TotalPrice({
       <Modal
         isOpen={isOpen}
         onClose={closeModal}
-        className="modal-container max-w-[700px] m-4"
+        className="modal-edit-food max-w-[700px] m-4"
       >
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
@@ -292,27 +315,53 @@ export default function TotalPrice({
 
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {tastes.length > 0
-                            ? tastes.map((taste: any) => (
-                                <button
-                                  key={taste.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
-                                onClick={e => selectTaste(taste.id,item.id,item.saleTempId)}>
-                                  {taste.name}
-                                </button>
-                              ))
+                            ? tastes.map((taste: any) =>
+                                detail.tasteId === taste.id ? (
+                                  <button
+                                    key={taste.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+                                    onClick={e => unSelectTaste(detail.id, detail.saleTempId)}
+                                  >
+                                    {taste.name}
+                                  </button>
+                                ) : (
+                                  <button
+                                    key={taste.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                                    onClick={(e) =>
+                                      selectTaste(
+                                        taste.id,
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
+                                  >
+                                    {taste.name}
+                                  </button>
+                                )
+                              )
                             : "-"}
                         </TableCell>
 
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {sizes.length > 0
-                            ? sizes.map((size: any) => (
-                                <button
-                                  key={size.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
-                                >
-                                  {size.name}
-                                </button>
-                              ))
+                            ? sizes.map((size: any) =>
+                                detail.sizeId === size.id ? (
+                                  <button
+                                    key={size.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+                                  >
+                                    {size.name}
+                                  </button>
+                                ) : (
+                                  <button
+                                    key={size.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                                  >
+                                    {size.name}
+                                  </button>
+                                )
+                              )
                             : "-"}
                         </TableCell>
                       </TableRow>
@@ -339,7 +388,6 @@ export default function TotalPrice({
               Save
             </Button>
           </div>
-          
         </div>
       </Modal>
     </div>

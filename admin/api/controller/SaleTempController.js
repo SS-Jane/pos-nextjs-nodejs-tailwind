@@ -1,5 +1,4 @@
 const { PrismaClient } = require("@prisma/client");
-const e = require("cors");
 const prisma = new PrismaClient();
 
 module.exports = {
@@ -187,6 +186,15 @@ module.exports = {
               },
             },
           },
+          SaleTempDetails: {
+            include: {
+              Food: true,
+              FoodSize: true,
+            },
+            orderBy: {
+              id: "asc",
+            },
+          },
         },
       });
       return res.send({ results: saleTemp });
@@ -196,7 +204,7 @@ module.exports = {
   },
   selectTaste: async (req, res) => {
     try {
-      await prisma.saleTemp.update({
+      await prisma.saleTempDetail.update({
         where: {
           id: req.body.saleTempDetailId,
         },
@@ -204,7 +212,22 @@ module.exports = {
           tasteId: req.body.tasteId,
         },
       });
-      return req.send({ message: "success" });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  unSelectTaste: async (req, res) => {
+    try {
+      await prisma.saleTempDetail.update({
+        where: {
+          id: req.body.saleTempDetailId,
+        },
+        data: {
+          tasteId: null,
+        },
+      });
+      return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

@@ -94,6 +94,9 @@ app.get("/api/saleTemp/info/:id", (req, res) =>
 app.put("/api/saleTemp/selectTaste", (req, res) =>
   SaleTempController.selectTaste(req, res)
 );
+app.put("/api/saleTemp/unSelectTaste", (req,res) => {
+  SaleTempController.unSelectTaste(req,res)
+})
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
