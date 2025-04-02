@@ -89,8 +89,8 @@ module.exports = {
     try {
       const saleTemps = await prisma.saleTemp.findMany({
         where: {
-          userId: parseInt(req.body.userId),
-          tableNumber: parseInt(req.body.tableNumber),
+          userId: req.body.userId,
+          tableNumber: req.body.tableNumber,
         },
         select: { id: true },
       });
@@ -225,6 +225,36 @@ module.exports = {
         },
         data: {
           tasteId: null,
+        },
+      });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  selectSize: async (req, res) => {
+    try {
+      await prisma.saleTempDetail.update({
+        where: {
+          id: req.body.saleTempDetailId,
+        },
+        data: {
+          foodSizeId: req.body.sizeId,
+        },
+      });
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  unSelectSize: async (req, res) => {
+    try {
+      await prisma.saleTempDetail.update({
+        where: {
+          id: req.body.saleTempDetailId,
+        },
+        data: {
+          foodSizeId: null,
         },
       });
       return res.send({ message: "success" });

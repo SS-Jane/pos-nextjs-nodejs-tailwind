@@ -137,7 +137,6 @@ export default function TotalPrice({
         setTastes([]);
         setSizes([]);
       }
-
     } catch (error: any) {
       Swal.fire({
         title: "Error",
@@ -170,24 +169,69 @@ export default function TotalPrice({
     }
   };
 
-  const unSelectTaste = async (saleTempDetailId : number,saleTempId : number) => {
+  const unSelectTaste = async (
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
     try {
       const payload = {
-        saleTempDetailId: saleTempDetailId
-      }
+        saleTempDetailId: saleTempDetailId,
+      };
 
-      await axios.put(`${config.apiServer}/api/saleTemp/unSelectTaste`, payload);
+      await axios.put(
+        `${config.apiServer}/api/saleTemp/unSelectTaste`,
+        payload
+      );
       fetchDataSaleTempInfo(saleTempId);
-      
-    } catch (error) {
-      Swal.firs({
-        target : document.querySelector(".model-edit-food"),
-        title : "error",
-        text : error.message,
-        icon : "error",
-      })
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".model-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
     }
-  }
+  };
+
+  const selectSize = async (
+    sizeId: number,
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
+    try {
+      const payload = {
+        sizeId: sizeId,
+        saleTempDetailId: saleTempDetailId,
+      };
+
+      axios.put(`${config.apiServer}/api/saleTemp/selectSize`, payload);
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const unSelectSize = async (saleTempDetailId: number, saleTempId: number) => {
+    try {
+      const payload = {
+        saleTempDetailId: saleTempDetailId,
+      };
+      axios.put(`${config.apiServer}/api/saleTemp/unSelectSize`, payload);
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
@@ -320,7 +364,12 @@ export default function TotalPrice({
                                   <button
                                     key={taste.id}
                                     className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
-                                    onClick={e => unSelectTaste(detail.id, detail.saleTempId)}
+                                    onClick={(e) =>
+                                      unSelectTaste(
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
                                   >
                                     {taste.name}
                                   </button>
@@ -346,10 +395,13 @@ export default function TotalPrice({
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {sizes.length > 0
                             ? sizes.map((size: any) =>
-                                detail.sizeId === size.id ? (
+                                detail.foodSizeId === size.id ? (
                                   <button
                                     key={size.id}
                                     className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+                                    onClick={(e) =>
+                                      unSelectSize(detail.id, detail.saleTempId)
+                                    }
                                   >
                                     {size.name}
                                   </button>
@@ -357,6 +409,13 @@ export default function TotalPrice({
                                   <button
                                     key={size.id}
                                     className="px-2 py-2 mx-2 my-1 rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                                    onClick={(e) =>
+                                      selectSize(
+                                        size.id,
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
                                   >
                                     {size.name}
                                   </button>
