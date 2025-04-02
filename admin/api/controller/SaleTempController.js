@@ -75,9 +75,18 @@ module.exports = {
   },
   remove: async (req, res) => {
     try {
+
+      const saleTempId = parseInt(req.params.id);
+
+      await prisma.saleTempDetail.deleteMany({
+        where : {
+          saleTempId : saleTempId,
+        }
+      })
+
       await prisma.saleTemp.delete({
         where: {
-          id: parseInt(req.params.id),
+          id: saleTempId,
         },
       });
       return res.send({ message: "success" });
