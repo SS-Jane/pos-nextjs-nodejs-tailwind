@@ -29,10 +29,13 @@ export interface SaleTemps {
   id: number;
   userId: number;
   tableNumber: number;
-  SaleTempDetails: SaleTempDetail[];
+  foodId: number;
+  qty: number;
+  SaleTempDetails: SaleTempDetails[];
+  Foods: Foods[];
 }
 
-export interface SaleTempDetail {
+export interface SaleTempDetails {
   id: number;
   saleTempId: number;
   foodId: number;
@@ -43,6 +46,22 @@ export interface SaleTempDetail {
       id: number;
       name: string;
       price: number;
+    }
+  ];
+  FoodSize: [
+    {
+      id: number;
+      name: string;
+      moneyAdded: number;
+    }
+  ];
+  SaleTemp: [
+    {
+      id: number;
+      userId: number;
+      tableNumber: number;
+      foodId: number;
+      qty: number;
     }
   ];
 }

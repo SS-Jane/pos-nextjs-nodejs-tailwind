@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import CalculateTotalPrice from "./CalculateTotalPrice";
 
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
@@ -34,11 +35,13 @@ export default function TotalPrice({
   const { isOpen, openModal, closeModal } = useModal();
   const [tastes, setTastes] = useState("");
   const [sizes, setSizes] = useState("");
+  const [amountAdded, setAmountAdded] = useState(0);
+  const [saleTempId, setSaleTempId] = useState(0);
 
   useEffect(() => {
+    console.log("Sale Temp is", saleTemps);
     sumAmount(saleTemps);
-    console.log("Updated SaleTempDetails:", saleTempDetails);
-  }, [saleTemps, saleTempDetails]);
+  }, [saleTemps]);
 
   const removeSaleTemp = async (id: number) => {
     try {
@@ -91,11 +94,16 @@ export default function TotalPrice({
 
   const handleEdit = async (item: any) => {
     try {
+      setSaleTempId(item.id);
       await generateSaleTempDetail(item.id);
       await fetchDataSaleTempInfo(item.id);
       openModal();
     } catch (error: any) {
-      Swal.fire({ title: "Error", text: error.message, icon: "error" });
+      Swal.fire({
+        title: "Error",
+        text: error.message,
+        icon: "error",
+      });
     }
   };
 
@@ -132,13 +140,18 @@ export default function TotalPrice({
         setSaleTempDetails(data.SaleTempDetails || []);
         setTastes(data.Food?.FoodCategories?.Tastes || []);
         setSizes(data.Food?.FoodCategories?.FoodSizes || []);
+        sumAmount(data.SaleTempDetails);
+        sumMoneyAdded(data.SaleTempDetails);
       } else {
         setSaleTempDetails([]);
         setTastes([]);
         setSizes([]);
+        setAmount(0);
+        setAmountAdded(0);
       }
     } catch (error: any) {
       Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
         title: "Error",
         text: error.message,
         icon: "error",
@@ -158,7 +171,9 @@ export default function TotalPrice({
       };
 
       await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`, payload);
-      fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTempInfo(saleTempId);
+
+      await fetchDataSaleTemp();
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-edit-food"),
@@ -182,7 +197,9 @@ export default function TotalPrice({
         `${config.apiServer}/api/saleTemp/unSelectTaste`,
         payload
       );
-      fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTempInfo(saleTempId);
+
+      await fetchDataSaleTemp();
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".model-edit-food"),
@@ -205,7 +222,8 @@ export default function TotalPrice({
       };
 
       axios.put(`${config.apiServer}/api/saleTemp/selectSize`, payload);
-      fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTemp();
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-edit-food"),
@@ -222,6 +240,39 @@ export default function TotalPrice({
         saleTempDetailId: saleTempDetailId,
       };
       axios.put(`${config.apiServer}/api/saleTemp/unSelectSize`, payload);
+      await fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTemp();
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const sumMoneyAdded = (saleTempDetails: any) => {
+    let sum = 0;
+
+    saleTempDetails.forEach((detail: any) => {
+      console.log(detail.FoodSize?.moneyAdded);
+      sum += detail.FoodSize?.moneyAdded ?? 0;
+    });
+
+    setAmountAdded(sum);
+  };
+
+  const createSaleTempDetail = async () => {
+    try {
+      const payload = {
+        saleTempId: saleTempId,
+      };
+      await axios.post(
+        `${config.apiServer}/api/saleTemp/createSaleTempDetail`,
+        payload
+      );
+      await fetchDataSaleTemp();
       fetchDataSaleTempInfo(saleTempId);
     } catch (error: any) {
       Swal.fire({
@@ -233,10 +284,12 @@ export default function TotalPrice({
     }
   };
 
+  
+
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
       <div className="bg-white dark:bg-black text-black dark:text-white font-semibold text-right p-4 rounded-lg text-2xl">
-        ฿{amount.toLocaleString("th-TH")}
+        ฿{(amount + amountAdded).toLocaleString("th-TH")}
       </div>
       <div className="mt-4 space-y-4">
         {saleTemps.length === 0 ? (
@@ -252,8 +305,8 @@ export default function TotalPrice({
                   {item.Food.name}
                 </h5>
                 <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  {item.Food.price} x {item.qty} = ฿
-                  {(item.Food.price * item.qty).toFixed(2)}
+                  {item.Food.price} x {item.qty} + {amountAdded} = ฿
+                  <CalculateTotalPrice item={item}/>
                 </p>
               </div>
 
@@ -302,7 +355,8 @@ export default function TotalPrice({
       <Modal
         isOpen={isOpen}
         onClose={closeModal}
-        className="modal-edit-food max-w-[700px] m-4"
+        isFullscreen={true}
+        className="modal-edit-food"
       >
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
@@ -317,7 +371,7 @@ export default function TotalPrice({
                 size="md"
                 variant="primary"
                 startIcon={<PlusIcon />}
-                onClick={() => openModal()}
+                onClick={createSaleTempDetail}
               >
                 Add food list
               </Button>
@@ -403,7 +457,7 @@ export default function TotalPrice({
                                       unSelectSize(detail.id, detail.saleTempId)
                                     }
                                   >
-                                    {size.name}
+                                    +{size.moneyAdded} {size.name}
                                   </button>
                                 ) : (
                                   <button
@@ -417,7 +471,7 @@ export default function TotalPrice({
                                       )
                                     }
                                   >
-                                    {size.name}
+                                    +{size.moneyAdded} {size.name}
                                   </button>
                                 )
                               )
@@ -438,14 +492,6 @@ export default function TotalPrice({
                 </TableBody>
               </Table>
             </div>
-          </div>
-          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-            <Button size="sm" variant="outline" onClick={closeModal}>
-              Close
-            </Button>
-            <Button size="sm" type="submit">
-              Save
-            </Button>
           </div>
         </div>
       </Modal>
