@@ -152,6 +152,7 @@ module.exports = {
           SaleTempDetails: true,
         },
       });
+
       if (saleTemp.SaleTempDetails.length === 0) {
         for (let i = 0; i < saleTemp.qty; i++) {
           await prisma.saleTempDetail.create({
@@ -162,6 +163,7 @@ module.exports = {
           });
         }
       }
+      
       return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
