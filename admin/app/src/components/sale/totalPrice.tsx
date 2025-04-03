@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
+import CalculateTotalPrice from "./CalculateTotalPrice";
 
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
@@ -34,11 +35,13 @@ export default function TotalPrice({
   const { isOpen, openModal, closeModal } = useModal();
   const [tastes, setTastes] = useState("");
   const [sizes, setSizes] = useState("");
+  const [amountAdded, setAmountAdded] = useState(0);
+  const [saleTempId, setSaleTempId] = useState(0);
 
   useEffect(() => {
+    console.log("Sale Temp is", saleTemps);
     sumAmount(saleTemps);
-    console.log("Updated SaleTempDetails:", saleTempDetails);
-  }, [saleTemps, saleTempDetails]);
+  }, [saleTemps]);
 
   const removeSaleTemp = async (id: number) => {
     try {
@@ -91,11 +94,16 @@ export default function TotalPrice({
 
   const handleEdit = async (item: any) => {
     try {
+      setSaleTempId(item.id);
       await generateSaleTempDetail(item.id);
       await fetchDataSaleTempInfo(item.id);
       openModal();
     } catch (error: any) {
-      Swal.fire({ title: "Error", text: error.message, icon: "error" });
+      Swal.fire({
+        title: "Error",
+        text: error.message,
+        icon: "error",
+      });
     }
   };
 
@@ -128,19 +136,22 @@ export default function TotalPrice({
 
       const data = res.data.results;
 
-      console.log("data is", data);
-
       if (data) {
-        setSaleTempDetails([data]);
+        setSaleTempDetails(data.SaleTempDetails || []);
         setTastes(data.Food?.FoodCategories?.Tastes || []);
         setSizes(data.Food?.FoodCategories?.FoodSizes || []);
+        sumAmount(data.SaleTempDetails);
+        sumMoneyAdded(data.SaleTempDetails);
       } else {
         setSaleTempDetails([]);
         setTastes([]);
         setSizes([]);
+        setAmount(0);
+        setAmountAdded(0);
       }
     } catch (error: any) {
       Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
         title: "Error",
         text: error.message,
         icon: "error",
@@ -148,28 +159,137 @@ export default function TotalPrice({
     }
   };
 
-  const selectTaste =async (tasteId:number, saleTempDetailId: number, saleTempId : number) => {
+  const selectTaste = async (
+    tasteId: number,
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
     try {
       const payload = {
-        tasteId : tasteId,
-        saleTempDetailId : saleTempDetailId
-      }
+        tasteId: tasteId,
+        saleTempDetailId: saleTempDetailId,
+      };
 
-      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`,payload);
-      fetchDataSaleTempInfo(saleTempId)
-    } catch (error : any) {
+      await axios.put(`${config.apiServer}/api/saleTemp/selectTaste`, payload);
+      await fetchDataSaleTempInfo(saleTempId);
+
+      await fetchDataSaleTemp();
+    } catch (error: any) {
       Swal.fire({
-        title : 'error',
-        text : error.message,
-        icon : 'error'
-      })
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
     }
-  }
+  };
+
+  const unSelectTaste = async (
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
+    try {
+      const payload = {
+        saleTempDetailId: saleTempDetailId,
+      };
+
+      await axios.put(
+        `${config.apiServer}/api/saleTemp/unSelectTaste`,
+        payload
+      );
+      await fetchDataSaleTempInfo(saleTempId);
+
+      await fetchDataSaleTemp();
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".model-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const selectSize = async (
+    sizeId: number,
+    saleTempDetailId: number,
+    saleTempId: number
+  ) => {
+    try {
+      const payload = {
+        sizeId: sizeId,
+        saleTempDetailId: saleTempDetailId,
+      };
+
+      axios.put(`${config.apiServer}/api/saleTemp/selectSize`, payload);
+      await fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTemp();
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const unSelectSize = async (saleTempDetailId: number, saleTempId: number) => {
+    try {
+      const payload = {
+        saleTempDetailId: saleTempDetailId,
+      };
+      axios.put(`${config.apiServer}/api/saleTemp/unSelectSize`, payload);
+      await fetchDataSaleTempInfo(saleTempId);
+      await fetchDataSaleTemp();
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const sumMoneyAdded = (saleTempDetails: any) => {
+    let sum = 0;
+
+    saleTempDetails.forEach((detail: any) => {
+      console.log(detail.FoodSize?.moneyAdded);
+      sum += detail.FoodSize?.moneyAdded ?? 0;
+    });
+
+    setAmountAdded(sum);
+  };
+
+  const createSaleTempDetail = async () => {
+    try {
+      const payload = {
+        saleTempId: saleTempId,
+      };
+      await axios.post(
+        `${config.apiServer}/api/saleTemp/createSaleTempDetail`,
+        payload
+      );
+      await fetchDataSaleTemp();
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-edit-food"),
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
       <div className="bg-white dark:bg-black text-black dark:text-white font-semibold text-right p-4 rounded-lg text-2xl">
-        ฿{amount.toLocaleString("th-TH")}
+        ฿{(amount + amountAdded).toLocaleString("th-TH")}
       </div>
       <div className="mt-4 space-y-4">
         {saleTemps.length === 0 ? (
@@ -185,8 +305,8 @@ export default function TotalPrice({
                   {item.Food.name}
                 </h5>
                 <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  {item.Food.price} x {item.qty} = ฿
-                  {(item.Food.price * item.qty).toFixed(2)}
+                  {item.Food.price} x {item.qty} + {amountAdded} = ฿
+                  <CalculateTotalPrice item={item}/>
                 </p>
               </div>
 
@@ -235,7 +355,8 @@ export default function TotalPrice({
       <Modal
         isOpen={isOpen}
         onClose={closeModal}
-        className="modal-container max-w-[700px] m-4"
+        isFullscreen={true}
+        className="modal-edit-food"
       >
         <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
@@ -250,7 +371,7 @@ export default function TotalPrice({
                 size="md"
                 variant="primary"
                 startIcon={<PlusIcon />}
-                onClick={() => openModal()}
+                onClick={createSaleTempDetail}
               >
                 Add food list
               </Button>
@@ -292,27 +413,68 @@ export default function TotalPrice({
 
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {tastes.length > 0
-                            ? tastes.map((taste: any) => (
-                                <button
-                                  key={taste.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
-                                onClick={e => selectTaste(taste.id,item.id,item.saleTempId)}>
-                                  {taste.name}
-                                </button>
-                              ))
+                            ? tastes.map((taste: any) =>
+                                detail.tasteId === taste.id ? (
+                                  <button
+                                    key={taste.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+                                    onClick={(e) =>
+                                      unSelectTaste(
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
+                                  >
+                                    {taste.name}
+                                  </button>
+                                ) : (
+                                  <button
+                                    key={taste.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                                    onClick={(e) =>
+                                      selectTaste(
+                                        taste.id,
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
+                                  >
+                                    {taste.name}
+                                  </button>
+                                )
+                              )
                             : "-"}
                         </TableCell>
 
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {sizes.length > 0
-                            ? sizes.map((size: any) => (
-                                <button
-                                  key={size.id}
-                                  className="p-1 bg-gray-200 rounded-md m-1"
-                                >
-                                  {size.name}
-                                </button>
-                              ))
+                            ? sizes.map((size: any) =>
+                                detail.foodSizeId === size.id ? (
+                                  <button
+                                    key={size.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+                                    onClick={(e) =>
+                                      unSelectSize(detail.id, detail.saleTempId)
+                                    }
+                                  >
+                                    +{size.moneyAdded} {size.name}
+                                  </button>
+                                ) : (
+                                  <button
+                                    key={size.id}
+                                    className="px-2 py-2 mx-2 my-1 rounded-lg bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
+                                    onClick={(e) =>
+                                      selectSize(
+                                        size.id,
+                                        detail.id,
+                                        detail.saleTempId
+                                      )
+                                    }
+                                  >
+                                    +{size.moneyAdded} {size.name}
+                                  </button>
+                                )
+                              )
                             : "-"}
                         </TableCell>
                       </TableRow>
@@ -331,15 +493,6 @@ export default function TotalPrice({
               </Table>
             </div>
           </div>
-          <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-            <Button size="sm" variant="outline" onClick={closeModal}>
-              Close
-            </Button>
-            <Button size="sm" type="submit">
-              Save
-            </Button>
-          </div>
-          
         </div>
       </Modal>
     </div>
