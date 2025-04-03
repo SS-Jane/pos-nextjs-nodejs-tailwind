@@ -94,6 +94,18 @@ app.get("/api/saleTemp/info/:id", (req, res) =>
 app.put("/api/saleTemp/selectTaste", (req, res) =>
   SaleTempController.selectTaste(req, res)
 );
+app.put("/api/saleTemp/unSelectTaste", (req, res) => {
+  SaleTempController.unSelectTaste(req, res);
+});
+app.put("/api/saleTemp/selectSize", (req, res) => {
+  SaleTempController.selectSize(req, res);
+});
+app.put("/api/saleTemp/unSelectSize", (req, res) => {
+  SaleTempController.unSelectSize(req, res);
+});
+app.post("/api/saleTemp/createSaleTempDetail", (req, res) => {
+  SaleTempController.createSaleTempDetail(req, res);
+});
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
