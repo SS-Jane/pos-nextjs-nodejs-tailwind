@@ -38,6 +38,7 @@ export default function TotalPrice({
   const [amountAdded, setAmountAdded] = useState(0);
   const [saleTempId, setSaleTempId] = useState(0);
 
+
   useEffect(() => {
     console.log("Sale Temp is", saleTemps);
     sumAmount(saleTemps);
@@ -94,6 +95,7 @@ export default function TotalPrice({
 
   const handleEdit = async (item: any) => {
     try {
+
       setSaleTempId(item.id);
       await generateSaleTempDetail(item.id);
       await fetchDataSaleTempInfo(item.id);
@@ -284,7 +286,6 @@ export default function TotalPrice({
     }
   };
 
-  
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
@@ -314,7 +315,7 @@ export default function TotalPrice({
                 <Button
                   size="sm"
                   onClick={() => updateQty(item.id, item.qty - 1)}
-                  disabled={item.qty === 0}
+                  disabled={item.qty === 0 && item.saleTempDetails?.length > 0}
                 >
                   <FontAwesomeIcon icon={faMinus} />
                 </Button>
@@ -326,6 +327,7 @@ export default function TotalPrice({
                 <Button
                   size="sm"
                   onClick={() => updateQty(item.id, item.qty + 1)}
+                  disabled={item.saleTempDetails?.length > 0}
                 >
                   <FontAwesomeIcon icon={faPlus} />
                 </Button>
@@ -358,14 +360,14 @@ export default function TotalPrice({
         isFullscreen={true}
         className="modal-edit-food"
       >
-        <div className="relative w-full p-4 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
+        <div className="relative w-full p-4 sm:p-6 lg:p-8 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900">
+          <div className="border-b px-2 pr-14 pb-3">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Edit food details
             </h4>
           </div>
 
-          <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+          <div className="mt-4 flex flex-col">
             <div>
               <Button
                 size="md"
@@ -376,26 +378,26 @@ export default function TotalPrice({
                 Add food list
               </Button>
             </div>
-            <div className="table-container">
-              <Table>
+            <div className="table-container mt-4 overflow-auto">
+              <Table className="w-full min-w-[300px] border rounded-lg">
                 {/* Table Header */}
-                <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                <TableHeader className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Food name
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Taste
                     </TableCell>
                     <TableCell
                       isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
                     >
                       Size
                     </TableCell>
@@ -404,13 +406,15 @@ export default function TotalPrice({
 
                 {/* Table Body */}
                 <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-                  {saleTempDetails.length > 0 ? (
+                  {saleTempDetails?.length > 0 ? (
                     saleTempDetails.map((detail: any) => (
-                      <TableRow key={detail.id}>
-                        <TableCell className="px-5 py-4 sm:px-6 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
+                      <TableRow
+                        key={detail.id}
+                        className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                      >
+                        <TableCell className="px-6 py-4 sm:px-7 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {detail.Food?.name || "-"}
                         </TableCell>
-
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
                           {tastes.length > 0
                             ? tastes.map((taste: any) =>
