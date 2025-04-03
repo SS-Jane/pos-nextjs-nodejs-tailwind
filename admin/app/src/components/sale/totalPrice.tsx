@@ -286,6 +286,23 @@ export default function TotalPrice({
     }
   };
 
+  const removeSaleTempDetail = async(saleTempDetailId : number) => {
+    try {
+      const payload = {
+        saleTempDetailId : saleTempDetailId
+      }
+      await axios.delete(`${config.apiServer}/api/saleTemp/removeSaleTempDetail`, {data : payload});
+      await fetchDataSaleTemp();
+      fetchDataSaleTempInfo(saleTempId)
+    } catch (error : any) {
+      Swal.fire({
+        title : "error",
+        text : error.message,
+        icon : "error"
+      })
+    }
+  }
+
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
@@ -383,6 +400,12 @@ export default function TotalPrice({
                 {/* Table Header */}
                 <TableHeader className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
+                  <TableCell
+                      isHeader
+                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
+                    >
+                      การจัดการ
+                    </TableCell>
                     <TableCell
                       isHeader
                       className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
@@ -412,6 +435,9 @@ export default function TotalPrice({
                         key={detail.id}
                         className="hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
+                        <TableCell>
+                          <button onClick={e =>removeSaleTempDetail(detail.id)}>ลบ</button>
+                        </TableCell>
                         <TableCell className="px-6 py-4 sm:px-7 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {detail.Food?.name || "-"}
                         </TableCell>
