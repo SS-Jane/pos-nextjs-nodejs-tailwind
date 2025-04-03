@@ -75,14 +75,13 @@ module.exports = {
   },
   remove: async (req, res) => {
     try {
-
       const saleTempId = parseInt(req.params.id);
 
       await prisma.saleTempDetail.deleteMany({
-        where : {
-          saleTempId : saleTempId,
-        }
-      })
+        where: {
+          saleTempId: saleTempId,
+        },
+      });
 
       await prisma.saleTemp.delete({
         where: {
@@ -163,7 +162,7 @@ module.exports = {
           });
         }
       }
-      
+
       return res.send({ message: "success" });
     } catch (error) {
       return res.status(500).send({ error: error.message });
@@ -273,39 +272,81 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
-  createSaleTempDetail : async (req,res) => {
+  createSaleTempDetail: async (req, res) => {
     try {
       const saleTempId = req.body.saleTempId;
       const saleTempDetail = await prisma.saleTempDetail.findFirst({
-        where : {
-          saleTempId : saleTempId,
-        }
-      })
+        where: {
+          saleTempId: saleTempId,
+        },
+      });
 
       await prisma.saleTempDetail.create({
-        data : {
-          saleTempId : saleTempDetail.saleTempId,
-          foodId : saleTempDetail.foodId,
-        }
-      })
+        data: {
+          saleTempId: saleTempDetail.saleTempId,
+          foodId: saleTempDetail.foodId,
+        },
+      });
 
       const countSaleTempDetail = await prisma.saleTempDetail.count({
-        where : {
-          saleTempId : saleTempDetail.saleTempId,
+        where: {
+          saleTempId: saleTempDetail.saleTempId,
         },
-      })
+      });
 
       await prisma.saleTemp.update({
-        where : {
-          id : saleTempDetail.saleTempId,
+        where: {
+          id: saleTempDetail.saleTempId,
         },
-        data : {
-          qty : countSaleTempDetail
-        }
-      })
-      return res.send({ message : "success"})
+        data: {
+          qty: countSaleTempDetail,
+        },
+      });
+      return res.send({ message: "success" });
     } catch (error) {
-      return res.status(500).send({ error : error.message })
+      return res.status(500).send({ error: error.message });
     }
-  }
+  },
+  removeSaleTempDetail: async (req, res) => {
+    try {
+      const saleTempDetailId = req.body.saleTempDetailId;
+      const saleTempDetail = await prisma.saleTempDetail.findFirst({
+        where: {
+          id: saleTempDetailId,
+        },
+      });
+
+      if(!saleTempDetail) {
+        return res.status(404).send({ error : "SaleTempDetail not found"});
+      }
+      // ใช้ transaction ลบข้อมูลและอัปเดต qty 
+      await prisma.$transaction(async (prisma) => {
+        await prisma.saleTempDetail.delete({
+          where: {
+            id: saleTempDetailId,
+          },
+        });
+
+        const countSaleTempDetail = await prisma.saleTempDetail.count({
+          where: {
+            saleTempId: saleTempDetail.saleTempId,
+          },
+        });
+
+        await prisma.saleTemp.update({
+          where: {
+            id: saleTempDetail.saleTempId,
+          },
+          data: {
+            qty: countSaleTempDetail,
+          },
+        });
+
+      })
+
+      return res.send({ message: "success" });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
 };
