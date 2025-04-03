@@ -16,6 +16,9 @@ module.exports = {
           tableNumber: req.body.tableNumber,
           foodId: req.body.foodId,
         },
+        include: {
+          SaleTempDetails: true,
+        },
       });
 
       if (!rowSaleTemp) {
@@ -29,21 +32,28 @@ module.exports = {
         });
 
         saleTempId = createdSaleTemp.id;
-      } else {
-        const updatedSaleTemp = await prisma.saleTemp.update({
-          where: {
-            id: rowSaleTemp.id,
-          },
-          data: {
-            qty: rowSaleTemp.qty + 1,
-          },
-        });
-        saleTempId = updatedSaleTemp.id;
-      }
 
-      if (!saleTempId) {
-        console.error("Failed to create saleTemp");
-        return res.status(500).send({ error: "Database error" });
+        if (!saleTempId) {
+          console.error("Failed to create saleTemp");
+          return res.status(500).send({ error: "Database error" });
+        }
+      } else {
+        if (rowSaleTemp.SaleTempDetails.length === 0) {
+          const updatedSaleTemp = await prisma.saleTemp.update({
+            where: {
+              id: rowSaleTemp.id,
+            },
+            data: {
+              qty: rowSaleTemp.qty + 1,
+            },
+          });
+          saleTempId = updatedSaleTemp.id;
+
+          if (!saleTempId) {
+            console.error("Failed to update saleTemp");
+            return res.status(500).send({ error: "Database error" });
+          }
+        }
       }
 
       return res.send({ message: "success" });
@@ -316,10 +326,10 @@ module.exports = {
         },
       });
 
-      if(!saleTempDetail) {
-        return res.status(404).send({ error : "SaleTempDetail not found"});
+      if (!saleTempDetail) {
+        return res.status(404).send({ error: "SaleTempDetail not found" });
       }
-      // ใช้ transaction ลบข้อมูลและอัปเดต qty 
+      // ใช้ transaction ลบข้อมูลและอัปเดต qty
       await prisma.$transaction(async (prisma) => {
         await prisma.saleTempDetail.delete({
           where: {
@@ -341,8 +351,7 @@ module.exports = {
             qty: countSaleTempDetail,
           },
         });
-
-      })
+      });
 
       return res.send({ message: "success" });
     } catch (error) {
