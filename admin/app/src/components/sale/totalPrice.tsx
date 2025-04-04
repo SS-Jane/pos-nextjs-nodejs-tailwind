@@ -11,7 +11,7 @@ import axios from "axios";
 import config from "@/config";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
-import { PlusIcon } from "@/icons";
+import { CheckLineIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import {
   Table,
   TableBody,
@@ -24,20 +24,27 @@ import CalculateTotalPrice from "./CalculateTotalPrice";
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
   fetchDataSaleTemp: () => Promise<void>;
+  setAmount: (amount: number) => void;
+  amount?: number;
 }
+
+
 
 export default function TotalPrice({
   saleTemps,
   fetchDataSaleTemp,
+  setAmount,
+  amount,
 }: TotalPriceProps) {
   const [saleTempDetails, setSaleTempDetails] = useState<any[]>([]);
-  const [amount, setAmount] = useState(0);
-  const { isOpen, openModal, closeModal } = useModal();
+  const editModal = useModal();
+  const saleModal = useModal();
   const [tastes, setTastes] = useState("");
   const [sizes, setSizes] = useState("");
   const [amountAdded, setAmountAdded] = useState(0);
   const [saleTempId, setSaleTempId] = useState(0);
-
+  const [payType, setPayType] = useState("cash");
+  const [inputMoney, setInputMoney] = useState(0)
 
   useEffect(() => {
     console.log("Sale Temp is", saleTemps);
@@ -95,11 +102,10 @@ export default function TotalPrice({
 
   const handleEdit = async (item: any) => {
     try {
-
       setSaleTempId(item.id);
       await generateSaleTempDetail(item.id);
       await fetchDataSaleTempInfo(item.id);
-      openModal();
+      editModal.openModal();
     } catch (error: any) {
       Swal.fire({
         title: "Error",
@@ -286,11 +292,53 @@ export default function TotalPrice({
     }
   };
 
+  const removeSaleTempDetail = async (saleTempDetailId: number) => {
+    try {
+      const payload = {
+        saleTempDetailId: saleTempDetailId,
+      };
+      await axios.delete(
+        `${config.apiServer}/api/saleTemp/removeSaleTempDetail`,
+        { data: payload }
+      );
+      await fetchDataSaleTemp();
+      fetchDataSaleTempInfo(saleTempId);
+    } catch (error: any) {
+      Swal.fire({
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const cash = [
+    { id: 1, value: 20 },
+    { id: 2, value: 50 },
+    { id: 3, value: 100 },
+    { id: 4, value: 500 },
+    { id: 5, value: 1000 },
+  ];
 
   return (
     <div className=" dark:bg-black shadow-lg rounded-lg p-5 w-full max-w-md">
       <div className="bg-white dark:bg-black text-black dark:text-white font-semibold text-right p-4 rounded-lg text-2xl">
         ฿{(amount + amountAdded).toLocaleString("th-TH")}
+      </div>
+      <div>
+        {amount > 0 ? (
+          <Button
+            size="md"
+            variant="primary"
+            className="w-full font-bold text-xl bg-success-500 hover:bg-success-600"
+            startIcon={<CheckLineIcon />}
+            onClick={saleModal.openModal}
+          >
+            จบการขาย
+          </Button>
+        ) : (
+          <></>
+        )}
       </div>
       <div className="mt-4 space-y-4">
         {saleTemps.length === 0 ? (
@@ -307,7 +355,7 @@ export default function TotalPrice({
                 </h5>
                 <p className="text-gray-700 dark:text-gray-300 text-sm">
                   {item.Food.price} x {item.qty} + {amountAdded} = ฿
-                  <CalculateTotalPrice item={item}/>
+                  <CalculateTotalPrice item={item} />
                 </p>
               </div>
 
@@ -355,8 +403,8 @@ export default function TotalPrice({
       </div>
 
       <Modal
-        isOpen={isOpen}
-        onClose={closeModal}
+        isOpen={editModal.isOpen}
+        onClose={editModal.closeModal}
         isFullscreen={true}
         className="modal-edit-food"
       >
@@ -383,6 +431,12 @@ export default function TotalPrice({
                 {/* Table Header */}
                 <TableHeader className="bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-white border-b border-gray-100 dark:border-white/[0.05]">
                   <TableRow>
+                    <TableCell
+                      isHeader
+                      className="py-3 font-medium text-gray-500 text-center text-theme-md dark:text-gray-400"
+                    >
+                      การจัดการ
+                    </TableCell>
                     <TableCell
                       isHeader
                       className="px-5 py-3 font-medium text-gray-500 text-start text-theme-md dark:text-gray-400"
@@ -412,6 +466,14 @@ export default function TotalPrice({
                         key={detail.id}
                         className="hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
+                        <TableCell className="px-1 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400 flex flex-1 flex-row justify-center items-center space-x-2">
+                          <button
+                            className="p-1 flex items-center justify-center bg-red-700 text-white rounded-2xl"
+                            onClick={(e) => removeSaleTempDetail(detail.id)}
+                          >
+                            <TrashBinIcon height="20px" width="20px" />
+                          </button>
+                        </TableCell>
                         <TableCell className="px-6 py-4 sm:px-7 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
                           {detail.Food?.name || "-"}
                         </TableCell>
@@ -495,6 +557,106 @@ export default function TotalPrice({
                   )}
                 </TableBody>
               </Table>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={saleModal.isOpen}
+        onClose={saleModal.closeModal}
+        className="modal-sale max-w-[700px] m-4"
+      >
+        <div className="relative w-full p-4 sm:p-6 lg:p-8 overflow-y-auto bg-white no-scrollbar rounded-3xl dark:bg-gray-900">
+          <div className="border-b px-2 pr-14 pb-3">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              จบการขาย
+            </h4>
+          </div>
+
+          <div className="mt-5 font-bold text-gray-800 dark:text-white/90">
+            รูปแบบการชำระ
+          </div>
+
+          <div className="w-full flex flex-row items-center justify-center space-x-2 mt-4">
+            <div className="w-full">
+              <Button size="md" variant={payType == 'cash' ? 'primary' : 'outline'} className="w-full text-xl"
+              onClick={e => setPayType('cash')}>
+                เงินสด
+              </Button>
+            </div>
+            <div className="w-full">
+              <Button size="md" variant={payType == 'transfer' ? 'primary' : 'outline'} className="w-full text-xl"
+              onClick={e => setPayType('transfer')}>
+                เงินโอน
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-5 font-bold text-gray-800 dark:text-white/90">
+            ยอดเงิน
+          </div>
+
+          <div className="mt-4 w-full">
+            <input
+              type="text"
+              className="w-full text-end text-gray-500 border-gray-300 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 rounded-md"
+              value={(amount + amountAdded).toLocaleString("th-TH")}
+              disabled
+            />
+          </div>
+
+          <div className="mt-5 font-bold text-gray-800 dark:text-white/90">
+            รับเงิน
+          </div>
+          <div className="flex flex-row items-center justify-center w-full space-x-2 mt-4">
+            {cash.map((cash) => (
+              <div className="w-full" key={cash.id}>
+                <Button size="md" variant={inputMoney == cash.value ? 'primary': 'outline' } className="w-full" value={cash.value} onClick={e => setInputMoney(cash.value)}>
+                  {cash.value}
+                </Button>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 w-full">
+            <input
+              type="number"
+              placeholder="0.00"
+              className="w-full text-end rounded-md text-lg h-11 border appearance-none px-4 py-2.5 shadow-theme-xs placeholder:text-gray-400 focus:outline-none focus:ring dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+              value={inputMoney}
+              onChange={e => setInputMoney(Number(e.target.value))}
+            />
+          </div>
+          <div className="mt-5 font-bold text-gray-800 dark:text-white/90">
+            เงินทอน
+          </div>
+          <div className="mt-4 w-full">
+            <input
+              type="number"
+              value={inputMoney - (amount + amountAdded)}
+              disabled
+              className="w-full text-end rounded-md text-gray-500 border-gray-300 cursor-not-allowed dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700"
+            />
+          </div>
+          <div className="flex flex-row items-center justify-center w-full space-x-4 mt-5">
+            <div className="w-full">
+              <Button
+                size="md"
+                variant="primary"
+                className="w-full text-xl font-extrabold"
+                onClick={e => setInputMoney(amount+amountAdded)}
+              >
+                จ่ายพอดี
+              </Button>
+            </div>
+            <div className="w-full">
+              <Button
+                size="md"
+                variant="primary"
+                className="w-full text-xl font-extrabold bg-success-500 hover:bg-success-600"
+              >
+                จบการขาย
+              </Button>
             </div>
           </div>
         </div>

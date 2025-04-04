@@ -106,6 +106,9 @@ app.put("/api/saleTemp/unSelectSize", (req, res) => {
 app.post("/api/saleTemp/createSaleTempDetail", (req, res) => {
   SaleTempController.createSaleTempDetail(req, res);
 });
+app.delete("/api/saleTemp/removeSaleTempDetail", (req, res) => {
+  SaleTempController.removeSaleTempDetail(req, res);
+});
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
