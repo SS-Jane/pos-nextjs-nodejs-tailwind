@@ -100,3 +100,15 @@ model SaleTempDetail {
   FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id],onDelete: SetNull)
   SaleTemp   SaleTemp  @relation(fields: [saleTempId], references: [id], onDelete: Cascade)
 }
+
+model Organization {
+  id  Int @id() @default(autoincrement())
+  name String
+  phone String
+  address String
+  email String
+  website String
+  promptpay String
+  logo String
+  taxCode String
+}

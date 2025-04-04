@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Badge from "../ui/badge/Badge";
@@ -71,6 +71,7 @@ export default function TableDinner() {
   const [foods, setFoods] = useState<Foods[]>([]);
   const tableDinnerRef = useRef<HTMLInputElement>(null);
   const [saleTemps, setSaleTemps] = useState<SaleTemps[]>([]);
+  const [amount, setAmount] = useState<number>(0)
 
   useEffect(() => {
     fetchFoodsData();
@@ -155,6 +156,26 @@ export default function TableDinner() {
     }
   };
 
+  const printBillbeforePay = async () => {
+    try {
+      const payload = {
+        tableNumber : tableDinner,
+        userId : Number(localStorage.getItem("posUserId"))
+      }
+
+      const res = await axios.post(`${config.apiServer}/api/saleTemp/printBill`, payload);
+
+
+
+    } catch (error : any) {
+      Swal.fire({
+        title : "Error",
+        text : error.message,
+        icon : "error",
+      })
+    }
+  }
+
   return (
     <div className="max-w-screen-xl mx-auto">
       <div className="flex flex-col sm:flex-row items-center justify-between mb-5 space-y-4 sm:space-y-0">
@@ -217,6 +238,16 @@ export default function TableDinner() {
               Clear
             </Badge>
           </button>
+          {amount > 0 ? <button>
+            <Badge
+              variant="solid"
+              color="warning"
+              size="md"
+              startIcon={<FontAwesomeIcon icon={faList} />}
+            >
+              Print Bill
+            </Badge>
+          </button>: <></>}
         </div>
       </div>
 
@@ -232,6 +263,8 @@ export default function TableDinner() {
           <TotalPrice
             saleTemps={saleTemps}
             fetchDataSaleTemp={fetchDataSaleTemp}
+            setAmount={setAmount}
+            amount={amount}
           />
         </div>
       </div>
