@@ -24,14 +24,19 @@ import CalculateTotalPrice from "./CalculateTotalPrice";
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
   fetchDataSaleTemp: () => Promise<void>;
+  setAmount: (amount: number) => void;
+  amount?: number;
 }
+
+
 
 export default function TotalPrice({
   saleTemps,
   fetchDataSaleTemp,
+  setAmount,
+  amount,
 }: TotalPriceProps) {
   const [saleTempDetails, setSaleTempDetails] = useState<any[]>([]);
-  const [amount, setAmount] = useState(0);
   const editModal = useModal();
   const saleModal = useModal();
   const [tastes, setTastes] = useState("");
