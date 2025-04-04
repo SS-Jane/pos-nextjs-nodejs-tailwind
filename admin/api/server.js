@@ -7,6 +7,7 @@ const cors = require("cors");
 const FoodTastesController = require("./controller/FoodTastesController");
 const FoodController = require("./controller/FoodController");
 const SaleTempController = require("./controller/SaleTempController");
+const OrganizationController = require("./controller/OrganizationController");
 const app = express();
 const fileUpload = require("express-fileupload");
 
@@ -108,6 +109,14 @@ app.post("/api/saleTemp/createSaleTempDetail", (req, res) => {
 });
 app.delete("/api/saleTemp/removeSaleTempDetail", (req, res) => {
   SaleTempController.removeSaleTempDetail(req, res);
+});
+
+// ---Organization taste API---
+app.post("/api/organization/create", (req, res) => {
+  OrganizationController.create(req, res);
+});
+app.get("/api/organization/info", (req, res) => {
+  OrganizationController.info(req, res);
 });
 
 app.listen(3001, () => {
