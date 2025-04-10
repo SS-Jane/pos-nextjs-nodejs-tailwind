@@ -5,10 +5,14 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
-import TextAreaInput from "../form/form-elements/TextAreaInput";
 import TextArea from "../form/input/TextArea";
+import Swal from "sweetalert2";
+import axios from "axios";
+import config from "@/config";
 
 interface UserInfoCardProps {
+  id: number;
+  setId: (id: number) => void;
   name: string;
   setName: (name: string) => void;
   phone: string;
@@ -19,27 +23,29 @@ interface UserInfoCardProps {
   setWebsite: (website: string) => void;
   logo: string;
   setLogo: (logo: string) => void;
-  promtpay: string;
-  setPromtpay: (promtpay: string) => void;
+  promptpay: string;
+  setPromtpay: (promptpay: string) => void;
   taxCode: string;
   setTaxCode: (taxCode: string) => void;
   address: {
     address: string;
-    city: string;
-    state: string;
-    country: string;
+    subDistrict: string;
+    district: string;
+    province: string;
     zipCode: string;
   };
   setAddress: (address: {
     address: string;
-    city: string;
-    state: string;
-    country: string;
+    subDistrict: string;
+    district: string;
+    province: string;
     zipCode: string;
   }) => void;
 }
 
 export default function UserInfoCard({
+  id,
+  setId,
   name,
   setName,
   phone,
@@ -48,7 +54,7 @@ export default function UserInfoCard({
   setEmail,
   website,
   setWebsite,
-  promtpay,
+  promptpay,
   setPromtpay,
   taxCode,
   setTaxCode,
@@ -56,10 +62,65 @@ export default function UserInfoCard({
   setAddress,
 }: UserInfoCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
+  const handleSave = async () => {
+    try {
+      const payload = {
+        name,
+        address: JSON.stringify({
+          address: address.address,
+          subDistrict: address.subDistrict,
+          district: address.district,
+          province: address.province,
+          zipCode: address.zipCode,
+        }),
+        phone,
+        email,
+        website,
+        promptpay,
+        taxCode,
+      };
+
+      const res = await axios.post(
+        `${config.apiServer}/api/organization/create`,
+        payload
+      );
+
+      if (res.data.message === "success") {
+        Swal.fire({
+          target: document.querySelector(".modal-information"),
+          title: "Add Organization",
+          text: "Add Organization success",
+          icon: "success",
+          timer: 2000,
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-information"),
+        icon: "error",
+        title: "Error",
+        text: error.message,
+        timer: 2000,
+      });
+    }
     closeModal();
+  };
+
+  const clearForm = () => {
+    setId(0);
+    setName("");
+    setPhone("");
+    setEmail("");
+    setWebsite("");
+    setPromtpay("");
+    setTaxCode("");
+    setAddress({
+      address: "",
+      subDistrict: "",
+      district: "",
+      province: "",
+      zipCode: "",
+    });
   };
 
   return (
@@ -70,7 +131,7 @@ export default function UserInfoCard({
             ข้อมูลร้านค้า
           </h4>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32 mt-5">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                 ชื่อร้านค้า
@@ -112,8 +173,8 @@ export default function UserInfoCard({
                 Address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {address.address},{address.city},{address.state},
-                {address.country},{address.zipCode}
+                {address.address},{address.subDistrict},{address.district},
+                {address.province},{address.zipCode}
               </p>
             </div>
 
@@ -122,7 +183,7 @@ export default function UserInfoCard({
                 Promtpay
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {promtpay}
+                {promptpay}
               </p>
             </div>
 
@@ -160,9 +221,16 @@ export default function UserInfoCard({
         </button>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[700px] m-4 modal-information"
+      >
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <form className="flex flex-col">
+          <form className="flex flex-col" onSubmit={(e)=>{
+            e.preventDefault();
+            handleSave();
+          }}>
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
@@ -184,98 +252,106 @@ export default function UserInfoCard({
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Phone</Label>
+                    <Label>เบอร์โทร</Label>
                     <Input
                       type="text"
                       value={phone}
-                      placeholder="phone"
+                      placeholder="เบอร์โทร"
                       onChange={(e) => setPhone(e.target.value)}
                     />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Email Address</Label>
+                    <Label>อีเมล</Label>
                     <Input
                       type="text"
                       value={email}
-                      placeholder="Email"
+                      placeholder="อีเมล"
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
-                    <Label>Website</Label>
+                    <Label>เว็บไซต์</Label>
                     <Input
                       type="text"
                       value={website}
-                      placeholder="Website"
+                      placeholder="เว็บไซต์"
                       onChange={(e) => setWebsite(e.target.value)}
                     />
                   </div>
 
-                  <div className="col-span-2">
-                    <Label>Address</Label>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>ที่อยู่</Label>
                     <TextArea
                       rows={6}
                       value={address.address}
-                      placeholder="Address"
-                      onChange={(e) =>
-                        setAddress({ ...address, address: e.target.value })
+                      placeholder="ที่อยู่"
+                      onChange={(value) =>
+                        setAddress({ ...address, address: value })
                       }
                     />
+                  </div>
 
-                    <Label>City</Label>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>ตำบล/แขวง</Label>
                     <Input
                       type="text"
-                      value={address.city}
-                      placeholder="City"
+                      value={address.subDistrict}
+                      placeholder="ตำบล/แขวง"
                       onChange={(e) =>
-                        setAddress({ ...address, city: e.target.value })
+                        setAddress({ ...address, subDistrict: e.target.value })
                       }
                     />
+                  </div>
 
-                    <Label>State</Label>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>อำเภอ/เขต</Label>
                     <Input
                       type="text"
-                      value={address.state}
-                      placeholder="State"
+                      value={address.district}
+                      placeholder="อำเภอ/เขต"
                       onChange={(e) =>
-                        setAddress({ ...address, state: e.target.value })
+                        setAddress({ ...address, district: e.target.value })
                       }
                     />
+                  </div>
 
-                    <Label>County</Label>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>จังหวัด</Label>
                     <Input
                       type="text"
-                      value={address.country}
-                      placeholder="County"
+                      value={address.province}
+                      placeholder="จังหวัด"
                       onChange={(e) =>
-                        setAddress({ ...address, country: e.target.value })
+                        setAddress({ ...address, province: e.target.value })
                       }
                     />
+                  </div>
 
-                    <Label>Zip code</Label>
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>รหัสไปรษณีย์</Label>
                     <Input
                       type="text"
                       value={address.zipCode}
-                      placeholder="Zip code"
+                      placeholder="รหัสไปรษณีย์"
                       onChange={(e) =>
                         setAddress({ ...address, zipCode: e.target.value })
                       }
                     />
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-2 lg:col-span-1">
                     <Label>PromtPay</Label>
                     <Input
                       type="text"
-                      value={promtpay}
-                      placeholder="Promtpay"
+                      value={promptpay}
+                      placeholder="เลขบัญชี PromtPay"
                       onChange={(e) => setPromtpay(e.target.value)}
                     />
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-2 lg:col-span-1">
                     <Label>Tax code</Label>
                     <Input
                       type="text"

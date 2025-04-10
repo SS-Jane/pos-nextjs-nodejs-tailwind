@@ -109,6 +109,6 @@ model Organization {
   email String
   website String
   promptpay String
-  logo String
+  logo String?
   taxCode String
 }

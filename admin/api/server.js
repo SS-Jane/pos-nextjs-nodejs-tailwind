@@ -118,6 +118,9 @@ app.post("/api/organization/create", (req, res) => {
 app.get("/api/organization/info", (req, res) => {
   OrganizationController.info(req, res);
 });
+app.get("/api/organization/upload", (req, res) =>
+  OrganizationController.upload(req, res)
+);
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");

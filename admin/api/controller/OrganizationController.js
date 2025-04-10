@@ -51,7 +51,22 @@ module.exports = {
     try {
       const organization = await prisma.organization.findFirst();
 
-      return res.send({ result: organization });
+      return res.send({ results: organization });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  upload: async (req, res) => {
+    try {
+      const file = req.files.file;
+
+      const extension = file.name.split(".").pop();
+
+      const fileName = `logo_${Date.now()}.${extension}`;
+
+      file.mv(`./uploads/logo/${fileName}`);
+
+      return res.send({ fileName: fileName });
     } catch (error) {
       return res.status(500).send({ error: error.message });
     }

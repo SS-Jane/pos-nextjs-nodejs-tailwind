@@ -1,37 +1,78 @@
 "use client";
-import React, { useState } from "react";
-import UserAddressCard from "@/components/organizationProfile/UserAddressCard";
+import React, { useEffect, useState } from "react";
 import UserInfoCard from "@/components/organizationProfile/UserInfoCard";
 import UserMetaCard from "@/components/organizationProfile/UserMetaCard";
+import axios from "axios";
+import config from "@/config";
+import Swal from "sweetalert2";
 
 function Profile() {
+  const [id, setId] = useState(0);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState({
     address: "",
-    city: "",
-    state: "",
-    country: "",
+    subDistrict: "",
+    district: "",
+    province: "",
     zipCode: "",
   });
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState("");
   const [logo, setLogo] = useState("");
-  const [promtpay, setPromtpay] = useState("");
+  const [promptpay, setPromtpay] = useState("");
   const [taxCode, setTaxCode] = useState("");
+  const [fileSelected, setFileSelected] = useState<Files | null>(null);
 
-  console.log("address", address);
+  const fetchDataOrganization = async () => {
+    try {
+      const res = await axios.get(`${config.apiServer}/api/organization/info`);
+
+      const results = res.data.results;
+
+      if (!res.data.result) {
+        setId(results.id);
+        setName(results.name);
+        setPhone(results.phone);
+        setEmail(results.email);
+        setWebsite(results.website);
+        setLogo(results.logo);
+        setPromtpay(results.promptpay);
+        setTaxCode(results.taxCode);
+        if (typeof res.data.results.address === "string") {
+          setAddress(JSON.parse(res.data.results.address));
+        } else {
+          setAddress(res.data.results.address);
+        }
+      }
+    } catch (error: any) {
+      Swal.fire({
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchDataOrganization();
+  }, []);
 
   return (
     <div className="space-y-6">
       <UserMetaCard
+        id={id}
+        setId={setId}
         name={name}
         logo={logo}
         setLogo={setLogo}
         taxCode={taxCode}
         address={address}
       />
+
       <UserInfoCard
+        id={id}
+        setId={setId}
         name={name}
         setName={setName}
         phone={phone}
@@ -44,7 +85,7 @@ function Profile() {
         setWebsite={setWebsite}
         logo={logo}
         setLogo={setLogo}
-        promtpay={promtpay}
+        promptpay={promptpay}
         setPromtpay={setPromtpay}
         taxCode={taxCode}
         setTaxCode={setTaxCode}
