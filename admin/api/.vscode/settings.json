@@ -3,6 +3,12 @@
         "autoincrement",
         "fname",
         "lname",
-        "promptpay"
+        "promptpay",
+        "sarabun",
+        "จำนวน",
+        "ใบแจ้งรายการ",
+        "ราคา",
+        "รายการ",
+        "รายการอาหาร"
     ]
 }

@@ -22,7 +22,7 @@ function Profile() {
   const [logo, setLogo] = useState("");
   const [promptpay, setPromtpay] = useState("");
   const [taxCode, setTaxCode] = useState("");
-  const [fileSelected, setFileSelected] = useState<Files | null>(null);
+  const [fileSelected, setFileSelected] = useState<File | null>(null);
 
   const fetchDataOrganization = async () => {
     try {
@@ -68,6 +68,8 @@ function Profile() {
         setLogo={setLogo}
         taxCode={taxCode}
         address={address}
+        fileSelected={fileSelected} 
+        setFileSelected={setFileSelected}
       />
 
       <UserInfoCard

@@ -5,6 +5,10 @@ import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Image from "next/image";
 import config from "@/config";
+import axios from "axios";
+import Swal from "sweetalert2";
+import FileInput from "../form/input/FileInput";
+import Label from "../form/Label";
 
 interface UserMetaCardProps {
   id: number;
@@ -18,6 +22,8 @@ interface UserMetaCardProps {
     province: string;
   };
   setLogo: (logo: string) => void;
+  fileSelected?: File | null;
+  setFileSelected?: (file: File | null) => void;
 }
 
 export default function UserMetaCard({
@@ -28,14 +34,74 @@ export default function UserMetaCard({
   taxCode,
   address,
   setLogo,
+  fileSelected,
+  setFileSelected,
 }: UserMetaCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
+
+  const handleSelectedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setFileSelected(file);
+
+      const logoUrl = URL.createObjectURL(file);
+      setLogo(logoUrl);
+    }
   };
 
+  const uploadFile = async (): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append("file", fileSelected as Blob);
+
+      const res = await axios.post(
+        `${config.apiServer}/api/organization/upload`,
+        formData
+      );
+
+      return res.data.fileName;
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-logo"),
+        text: error.message,
+        icon: "error",
+        title: "Error",
+      });
+
+      return "default-image.webp";
+    }
+  };
+
+  const handleSaveFile = async () => {
+    try {
+      const fileName = fileSelected ? await uploadFile() : logo;
+      const payload = {
+        logo: fileName,
+      };
+
+      const res = await axios.post(
+        `${config.apiServer}/api/organization/create`,
+        payload
+      );
+
+      if (res.data.message === "success") {
+        Swal.fire({
+          target: document.querySelector(".modal-logo"),
+          title: "Upload logo",
+          text: "Add logo success",
+          icon: "success",
+          timer: 2000,
+        });
+      }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-logo"),
+        text: error.message,
+        icon: "error",
+        title: "Error",
+      });
+    }
+  };
 
   return (
     <>
@@ -158,7 +224,11 @@ export default function UserMetaCard({
           </button>
         </div>
       </div>
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[700px] m-4 modal-logo"
+      >
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -168,41 +238,44 @@ export default function UserMetaCard({
               แก้ไขโลโกร้านของคุณให้เป็นปัจุบันได้ที่นี่
             </p>
           </div>
-          <form className="flex flex-col" onSubmit={(e)=>{
-            e.preventDefault();
-            handleSave();
-          }}>
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveFile();
+            }}
+          >
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              {/* <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Food image</Label>
-                    <FileInput onChange={handleSelectedFile} />
-                    <div className="mt-2">
-                      {myFiles ? (
-                        <Image
-                          src={URL.createObjectURL(myFiles)}
-                          alt="Preview"
-                          height={100}
-                          width={100}
-                        />
-                      ) : foodImg && foodImg !== "null" ? (
-                        <Image
-                          src={`${config.apiServer}/uploads/${foodImg}`}
-                          alt="Existing"
-                          height={100}
-                          width={100}
-                        />
-                      ) : (
-                        <Image
-                          src={`${config.apiServer}/uploads/default-image.webp`}
-                          alt="Default"
-                          height={100}
-                          width={100}
-                        />
-                      )}
-                    </div>
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div>
+                  <Label>โลโกร้านค้า</Label>
+                  <FileInput onChange={handleSelectedChange} />
+                  <div className="mt-2">
+                    {fileSelected ? (
+                      <Image
+                        src={URL.createObjectURL(fileSelected)}
+                        alt="Preview"
+                        height={100}
+                        width={100}
+                      />
+                    ) : logo && logo !== "null" ? (
+                      <Image
+                        src={`${config.apiServer}/uploads/logo/${logo}`}
+                        alt="Existing"
+                        height={100}
+                        width={100}
+                      />
+                    ) : (
+                      <Image
+                        src={`${config.apiServer}/uploads/default-image.webp`}
+                        alt="Default"
+                        height={100}
+                        width={100}
+                      />
+                    )}
                   </div>
-                </div> */}
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>

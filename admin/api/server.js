@@ -110,6 +110,7 @@ app.post("/api/saleTemp/createSaleTempDetail", (req, res) => {
 app.delete("/api/saleTemp/removeSaleTempDetail", (req, res) => {
   SaleTempController.removeSaleTempDetail(req, res);
 });
+app.post('/api/saleTemp/printBillBeforePay',(req,res)=> SaleTempController.printBillBeforePay(req,res));
 
 // ---Organization taste API---
 app.post("/api/organization/create", (req, res) => {
@@ -118,9 +119,10 @@ app.post("/api/organization/create", (req, res) => {
 app.get("/api/organization/info", (req, res) => {
   OrganizationController.info(req, res);
 });
-app.get("/api/organization/upload", (req, res) =>
+app.post("/api/organization/upload", (req, res) =>
   OrganizationController.upload(req, res)
 );
+
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");

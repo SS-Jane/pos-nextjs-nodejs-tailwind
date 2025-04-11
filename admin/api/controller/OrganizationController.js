@@ -58,13 +58,30 @@ module.exports = {
   },
   upload: async (req, res) => {
     try {
+      //รับไฟล์จาก user
       const file = req.files.file;
-
+      //เก็บนามสกุล
       const extension = file.name.split(".").pop();
-
+      //ตั้งชื่อไฟล์ด้วยวันที่และเวลา
       const fileName = `logo_${Date.now()}.${extension}`;
-
+      //ย้ายไฟล์ไปไว้ที่ folder logo 
       file.mv(`./uploads/logo/${fileName}`);
+      //หา ข้อมูลของ organization
+      const organization = await prisma.organization.findFirst();
+      //ถ้ามี
+      if (organization) {
+        //เรียกให้ fs module
+        const fs = require('fs');
+        //ลบไฟล์ logo ของ organization
+        fs.unlinkSync(`./uploads/logo/${organization.logo}`);
+        //upload ไฟล์ที่ส่งมาจาก user
+        await prisma.organization.upload({
+          where : {
+            id : organization.id
+          },
+          data : { logo : fileName }
+        })
+      }
 
       return res.send({ fileName: fileName });
     } catch (error) {

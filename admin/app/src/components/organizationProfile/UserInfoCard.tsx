@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
@@ -9,6 +9,7 @@ import TextArea from "../form/input/TextArea";
 import Swal from "sweetalert2";
 import axios from "axios";
 import config from "@/config";
+import Alert from "../ui/alert/Alert";
 
 interface UserInfoCardProps {
   id: number;
@@ -62,7 +63,48 @@ export default function UserInfoCard({
   setAddress,
 }: UserInfoCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
+  const [alert, setAlert] = useState({
+    show: false,
+    variant: "info" as "warning" | "error" | "success" | "info",
+    title: "",
+    message: "",
+  });
+
+  const validateForm = (): boolean => {
+    if (!name) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation error",
+        message: "Please enter a name.",
+      });
+      return false;
+    }
+    if (!taxCode) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation error",
+        message: "Please enter a Tax code.",
+      });
+      return false;
+    }
+    if (promptpay) {
+      setAlert({
+        show: true,
+        variant: "warning",
+        title: "Validation error",
+        message: "Please enter a Promptpay.",
+      });
+      return false;
+    }
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       const payload = {
         name,
@@ -227,10 +269,13 @@ export default function UserInfoCard({
         className="max-w-[700px] m-4 modal-information"
       >
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <form className="flex flex-col" onSubmit={(e)=>{
-            e.preventDefault();
-            handleSave();
-          }}>
+          <form
+            className="flex flex-col"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSave();
+            }}
+          >
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
@@ -370,6 +415,15 @@ export default function UserInfoCard({
               <Button size="sm" onClick={handleSave}>
                 Save Changes
               </Button>
+            </div>
+            <div className="mt-5">
+              {alert.show && (
+                <Alert
+                  variant={alert.variant}
+                  title={alert.title}
+                  message={alert.message}
+                />
+              )}
             </div>
           </form>
         </div>
