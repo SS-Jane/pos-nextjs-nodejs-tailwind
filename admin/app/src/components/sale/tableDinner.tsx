@@ -16,6 +16,8 @@ import config from "@/config";
 import TableFoods from "./tableFoods";
 import Swal from "sweetalert2";
 import TotalPrice from "./totalPrice";
+import { useModal } from "@/hooks/useModal";
+import { Modal } from "../ui/modal";
 
 export interface Foods {
   id: number;
@@ -72,6 +74,8 @@ export default function TableDinner() {
   const tableDinnerRef = useRef<HTMLInputElement>(null);
   const [saleTemps, setSaleTemps] = useState<SaleTemps[]>([]);
   const [amount, setAmount] = useState<number>(0);
+  const [billUrl, setBillUrl] = useState("");
+  const { isOpen, openModal, closeModal } = useModal();
 
   useEffect(() => {
     fetchFoodsData();
@@ -169,12 +173,9 @@ export default function TableDinner() {
       );
 
       if (res.data.message === "success") {
-        console.log("print bill success");
-        Swal.fire({
-          title: "Success!!",
-          text: "Print bill before pay success",
-          icon: "success",
-        });
+        setTimeout(() => {
+          setBillUrl(res.data.fileName);
+        }, 500);
       }
     } catch (error: any) {
       Swal.fire({
@@ -248,7 +249,12 @@ export default function TableDinner() {
             </Badge>
           </button>
           {amount > 0 ? (
-            <button onClick={() => printBillBeforePay()}>
+            <button
+              onClick={() => {
+                printBillBeforePay();
+                openModal();
+              }}
+            >
               <Badge
                 variant="solid"
                 color="warning"
@@ -281,6 +287,25 @@ export default function TableDinner() {
           />
         </div>
       </div>
+
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+        <div>
+          <div className="px-4 py-4 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              ปริ้นท์เอกสาร
+            </h4>
+          </div>
+          <div>
+            {billUrl && (
+              <iframe
+                src={`${config.apiServer}/${billUrl}`}
+                width="100%"
+                height="600px"
+              ></iframe>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

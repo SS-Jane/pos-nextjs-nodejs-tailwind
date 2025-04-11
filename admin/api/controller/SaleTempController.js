@@ -405,7 +405,7 @@ module.exports = {
         width: logoWidth,
         height: 20,
       });
-      doc.moveDown();
+      doc.moveDown(1.5);
 
       doc.font(font);
       doc.fontSize(5).text("*** ใบแจ้งรายการ ***", 20, doc.y + 8);
