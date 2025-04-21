@@ -24,9 +24,9 @@ module.exports = {
       if (!rowSaleTemp) {
         const createdSaleTemp = await prisma.saleTemp.create({
           data: {
-            userId: parseInt(req.body.userId),
-            tableNumber: parseInt(req.body.tableNumber),
-            foodId: parseInt(req.body.foodId),
+            userId: req.body.userId,
+            tableNumber: req.body.tableNumber,
+            foodId: req.body.foodId,
             qty: 1,
           },
         });
@@ -462,6 +462,92 @@ module.exports = {
 
       return res.send({ message: "success", fileName: fileName });
     } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  endSale: async (req, res) => {
+    const { userId, amount, inputMoney, payType, tableNumber, changeMoney } =
+      req.body;
+
+    try {
+      const saleTemps = await prisma.saleTemp.findMany({
+        include: {
+          SaleTempDetails: {
+            include: {
+              Food: true,
+            },
+          },
+          Food: true,
+        },
+        where: { userId },
+      });
+
+      if (saleTemps.length === 0) {
+        return res.status(400).send({ error: "ไม่พบข้อมูลการขายชั่วคราว" });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        //create bill
+        const billSale = await tx.billSale.create({
+          data: {
+            amount,
+            inputMoney,
+            payType,
+            tableNumber,
+            userId,
+            changeMoney,
+          },
+        });
+        // create array billSaleDetails
+
+        const billSaleDetailsData = [];
+
+        for (const item of saleTemps) {
+          if (item.SaleTempDetails.length > 0) {
+            for (const detail of item.SaleTempDetails) {
+              billSaleDetailsData.push({
+                billSaleId: billSale.id,
+                foodId: detail.foodId,
+                tasteId: detail.tasteId,
+                moneyAdded: detail.addedMoney,
+                price: detail.Food.price,
+              });
+            }
+          } else {
+            const qty = Math.max(item.qty, 1);
+            for (let i = 0; i < qty; i++) {
+              billSaleDetailsData.push({
+                billSaleId: billSale.id,
+                foodId: item.foodId,
+                price: item.Food.price,
+              });
+            }
+          }
+        }
+
+        // create many
+        await tx.billSaleDetail.createMany({
+          data: billSaleDetailsData,
+        });
+
+        // delete all saleTempDetails
+        await tx.saleTempDetail.deleteMany({
+          where: {
+            saleTempId: {
+              in: saleTemps.map((item) => item.id),
+            },
+          },
+        });
+
+        // delete all saleTemps
+        await tx.saleTemp.deleteMany({
+          where: { userId },
+        });
+      });
+
+      res.send({ message: "success" });
+    } catch (error) {
+      console.error("Error in endSale:", error);
       return res.status(500).send({ error: error.message });
     }
   },
