@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Badge from "../ui/badge/Badge";
@@ -16,6 +16,8 @@ import config from "@/config";
 import TableFoods from "./tableFoods";
 import Swal from "sweetalert2";
 import TotalPrice from "./totalPrice";
+import { useModal } from "@/hooks/useModal";
+import { Modal } from "../ui/modal";
 
 export interface Foods {
   id: number;
@@ -71,7 +73,9 @@ export default function TableDinner() {
   const [foods, setFoods] = useState<Foods[]>([]);
   const tableDinnerRef = useRef<HTMLInputElement>(null);
   const [saleTemps, setSaleTemps] = useState<SaleTemps[]>([]);
-  const [amount, setAmount] = useState<number>(0)
+  const [amount, setAmount] = useState<number>(0);
+  const [billUrl, setBillUrl] = useState("");
+  const { isOpen, openModal, closeModal } = useModal();
 
   useEffect(() => {
     fetchFoodsData();
@@ -156,25 +160,31 @@ export default function TableDinner() {
     }
   };
 
-  const printBillbeforePay = async () => {
+  const printBillBeforePay = async () => {
     try {
       const payload = {
-        tableNumber : tableDinner,
-        userId : Number(localStorage.getItem("posUserId"))
+        tableNumber: tableDinner,
+        userId: Number(localStorage.getItem("posUserId")),
+      };
+
+      const res = await axios.post(
+        `${config.apiServer}/api/saleTemp/printBillBeforePay`,
+        payload
+      );
+
+      if (res.data.message === "success") {
+        setTimeout(() => {
+          setBillUrl(res.data.fileName);
+        }, 500);
       }
-
-      const res = await axios.post(`${config.apiServer}/api/saleTemp/printBill`, payload);
-
-
-
-    } catch (error : any) {
+    } catch (error: any) {
       Swal.fire({
-        title : "Error",
-        text : error.message,
-        icon : "error",
-      })
+        title: "Error",
+        text: error.message,
+        icon: "error",
+      });
     }
-  }
+  };
 
   return (
     <div className="max-w-screen-xl mx-auto">
@@ -238,16 +248,25 @@ export default function TableDinner() {
               Clear
             </Badge>
           </button>
-          {amount > 0 ? <button>
-            <Badge
-              variant="solid"
-              color="warning"
-              size="md"
-              startIcon={<FontAwesomeIcon icon={faList} />}
+          {amount > 0 ? (
+            <button
+              onClick={() => {
+                printBillBeforePay();
+                openModal();
+              }}
             >
-              Print Bill
-            </Badge>
-          </button>: <></>}
+              <Badge
+                variant="solid"
+                color="warning"
+                size="md"
+                startIcon={<FontAwesomeIcon icon={faList} />}
+              >
+                Print Bill
+              </Badge>
+            </button>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
 
@@ -268,6 +287,25 @@ export default function TableDinner() {
           />
         </div>
       </div>
+
+      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+        <div>
+          <div className="px-4 py-4 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              ปริ้นท์เอกสาร
+            </h4>
+          </div>
+          <div>
+            {billUrl && (
+              <iframe
+                src={`${config.apiServer}/${billUrl}`}
+                width="100%"
+                height="600px"
+              ></iframe>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

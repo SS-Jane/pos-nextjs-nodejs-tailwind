@@ -25,6 +25,7 @@ model User {
   status    String   @default("use")
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
+  BillSales BillSale[]
 }
 
 model FoodType {
@@ -77,6 +78,7 @@ model Food {
   FoodCategories  FoodCategories   @relation(fields: [FoodCategoryId], references: [id],onDelete: Cascade)
   SaleTempDetails SaleTempDetail[]
   SaleTemps       SaleTemp[]
+  BillSaleDetails BillSaleDetail[]
 }
 
 model SaleTemp {
@@ -109,6 +111,33 @@ model Organization {
   email String
   website String
   promptpay String
-  logo String
+  logo String?
   taxCode String
+}
+
+model BillSale {
+id Int  @id() @default(autoincrement())
+createdDate DateTime  @default(now())
+payDate DateTime @default(now())
+amount Int
+payType String
+userId Int
+inputMoney Int
+changeMoney Int
+tableNumber Int
+status String @default("use")
+User User @relation(fields: [userId], references: [id])
+BillSaleDetails BillSaleDetail[]
+}
+
+model BillSaleDetail {
+  id Int @id() @default(autoincrement()) 
+  billSaleId Int
+  foodId Int
+  foodSizeId Int?
+  tasteId Int?
+  moneyAdded Int?
+  price Int?
+  BillSale BillSale @relation(fields: [billSaleId], references: [id])
+  Food Food @relation(fields: [foodId], references: [id])
 }

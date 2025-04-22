@@ -24,9 +24,9 @@ module.exports = {
       if (!rowSaleTemp) {
         const createdSaleTemp = await prisma.saleTemp.create({
           data: {
-            userId: parseInt(req.body.userId),
-            tableNumber: parseInt(req.body.tableNumber),
-            foodId: parseInt(req.body.foodId),
+            userId: req.body.userId,
+            tableNumber: req.body.tableNumber,
+            foodId: req.body.foodId,
             qty: 1,
           },
         });
@@ -355,6 +355,199 @@ module.exports = {
 
       return res.send({ message: "success" });
     } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  printBillBeforePay: async (req, res) => {
+    try {
+      const organization = await prisma.organization.findFirst();
+
+      const saleTemps = await prisma.saleTemp.findMany({
+        include: {
+          Food: true,
+          SaleTempDetails: true,
+        },
+        where: {
+          userId: req.body.userId,
+          tableNumber: req.body.tableNumber,
+        },
+      });
+
+      const parseAddress = JSON.parse(organization.address);
+
+      const pdfkit = require("pdfkit");
+      const fs = require("fs");
+      const dayjs = require("dayjs");
+
+      const paperWidth = 80;
+      const padding = 3;
+      const doc = new pdfkit({
+        size: [paperWidth, 200],
+        margins: {
+          top: 3,
+          bottom: 3,
+          left: 3,
+          right: 3,
+        },
+      });
+      const fileName = `uploads/bill/bill-${dayjs(new Date()).format(
+        "YYYYMMDDHHmmss"
+      )}.pdf`;
+      const font = "sarabun/Sarabun-Regular.ttf";
+
+      doc.pipe(fs.createWriteStream(fileName));
+
+      const logoWidth = 20;
+      const positionX = paperWidth / 2 - logoWidth / 2;
+
+      doc.image(`uploads/logo/${organization.logo}`, positionX, 5, {
+        align: "center",
+        width: logoWidth,
+        height: 20,
+      });
+      doc.moveDown(1.5);
+
+      doc.font(font);
+      doc.fontSize(5).text("*** ใบแจ้งรายการ ***", 20, doc.y + 8);
+      doc.fontSize(8);
+      doc.text(organization.name, padding, doc.y);
+      doc.fontSize(5);
+      doc.text(
+        `${parseAddress.address} ต.${parseAddress.subDistrict} อ.${parseAddress.district} จ.${parseAddress.province} ${parseAddress.zipCode}`
+      );
+      doc.text(`เบอร์โทร: ${organization.phone}`);
+      doc.text(`เลขประจำตัวผู้เสียภาษี: ${organization.taxCode}`);
+      doc.text(`โต๊ะ: ${req.body.tableNumber}`, { align: "center" });
+      doc.text(`วันที่: ${dayjs(new Date()).format("DD/MM/YYYY HH:mm:ss")}`, {
+        align: "center",
+      });
+      doc.text(`รายการอาหาร`, { align: "center" });
+      doc.moveDown();
+
+      const y = doc.y; // อัพเดตข้อมูลลงในบรรทัดเดียวกัน หรือสั่งให้ doc.y ไม่เพิ่มโดยอัตโนมัต (const)
+      doc.fontSize(4);
+      doc.text("รายการ", padding, y);
+      doc.text("ราคา", padding + 18, y, { align: "right", width: 20 });
+      doc.text("จำนวน", padding + 36, y, { align: "right", width: 20 });
+      doc.text("รวม", padding + 55, y, { align: "right" });
+
+      doc.lineWidth(0.1);
+      doc
+        .moveTo(padding, y + 6)
+        .lineTo(paperWidth - padding, y + 6)
+        .stroke();
+
+      saleTemps.map((item, index) => {
+        const y = doc.y;
+        doc.text(item.Food.name, padding, y);
+        doc.text(item.Food.price, padding + 18, y, {
+          align: "right",
+          width: 20,
+        });
+        doc.text(item.qty, padding + 36, y, { align: "right", width: 20 });
+        doc.text(item.Food.price * item.qty, padding + 55, y, {
+          align: "right",
+        });
+      });
+
+      let sumAmount = 0;
+      saleTemps.forEach((item) => {
+        sumAmount += item.Food.price * item.qty;
+      });
+
+      doc.text(`รวม: ${sumAmount.toLocaleString("th-TH")} บาท`, {
+        align: "right",
+      });
+      doc.end();
+
+      return res.send({ message: "success", fileName: fileName });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
+  endSale: async (req, res) => {
+    const { userId, amount, inputMoney, payType, tableNumber, changeMoney } =
+      req.body;
+
+    try {
+      const saleTemps = await prisma.saleTemp.findMany({
+        include: {
+          SaleTempDetails: {
+            include: {
+              Food: true,
+            },
+          },
+          Food: true,
+        },
+        where: { userId },
+      });
+
+      if (saleTemps.length === 0) {
+        return res.status(400).send({ error: "ไม่พบข้อมูลการขายชั่วคราว" });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        //create bill
+        const billSale = await tx.billSale.create({
+          data: {
+            amount,
+            inputMoney,
+            payType,
+            tableNumber,
+            userId,
+            changeMoney,
+          },
+        });
+        // create array billSaleDetails
+
+        const billSaleDetailsData = [];
+
+        for (const item of saleTemps) {
+          if (item.SaleTempDetails.length > 0) {
+            for (const detail of item.SaleTempDetails) {
+              billSaleDetailsData.push({
+                billSaleId: billSale.id,
+                foodId: detail.foodId,
+                tasteId: detail.tasteId,
+                moneyAdded: detail.addedMoney,
+                price: detail.Food.price,
+              });
+            }
+          } else {
+            const qty = Math.max(item.qty, 1);
+            for (let i = 0; i < qty; i++) {
+              billSaleDetailsData.push({
+                billSaleId: billSale.id,
+                foodId: item.foodId,
+                price: item.Food.price,
+              });
+            }
+          }
+        }
+
+        // create many
+        await tx.billSaleDetail.createMany({
+          data: billSaleDetailsData,
+        });
+
+        // delete all saleTempDetails
+        await tx.saleTempDetail.deleteMany({
+          where: {
+            saleTempId: {
+              in: saleTemps.map((item) => item.id),
+            },
+          },
+        });
+
+        // delete all saleTemps
+        await tx.saleTemp.deleteMany({
+          where: { userId },
+        });
+      });
+
+      res.send({ message: "success" });
+    } catch (error) {
+      console.error("Error in endSale:", error);
       return res.status(500).send({ error: error.message });
     }
   },
