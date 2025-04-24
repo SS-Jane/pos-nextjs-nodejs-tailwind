@@ -21,7 +21,7 @@ module.exports = {
           data: payload,
         });
 
-        organizationId = newOrganization.id;
+        const organizationId = newOrganization.id;
 
         if (!organizationId) {
           console.error("Failed to create Organization");
@@ -64,23 +64,27 @@ module.exports = {
       const extension = file.name.split(".").pop();
       //ตั้งชื่อไฟล์ด้วยวันที่และเวลา
       const fileName = `logo_${Date.now()}.${extension}`;
-      //ย้ายไฟล์ไปไว้ที่ folder logo 
+      //ย้ายไฟล์ไปไว้ที่ folder logo
       file.mv(`./uploads/logo/${fileName}`);
       //หา ข้อมูลของ organization
       const organization = await prisma.organization.findFirst();
       //ถ้ามี
       if (organization) {
         //เรียกให้ fs module
-        const fs = require('fs');
+        const fs = require("fs");
+        const oldLogoPath = `./uploads/logo/${organization.logo}`;
         //ลบไฟล์ logo ของ organization
-        fs.unlinkSync(`./uploads/logo/${organization.logo}`);
+        if(fs.existsSync(oldLogoPath)){
+          fs.unlinkSync(oldLogoPath);
+        }
+        
         //upload ไฟล์ที่ส่งมาจาก user
-        await prisma.organization.upload({
-          where : {
-            id : organization.id
+        await prisma.organization.update({
+          where: {
+            id: organization.id,
           },
-          data : { logo : fileName }
-        })
+          data: { logo: fileName },
+        });
       }
 
       return res.send({ fileName: fileName });
