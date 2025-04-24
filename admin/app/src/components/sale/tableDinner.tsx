@@ -176,10 +176,41 @@ export default function TableDinner() {
         setTimeout(() => {
           setBillUrl(res.data.fileName);
         }, 500);
+        console.log("Bill url", billUrl);
+        console.log("File name", res.data.fileName);
+        openModal();
       }
     } catch (error: any) {
       Swal.fire({
         title: "Error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const printBillAfterPay = async () => {
+    try {
+      const payload = {
+        tableNumber: tableDinner,
+        userId: Number(localStorage.getItem("posUserId")),
+      };
+
+      const res = await axios.post(
+        `${config.apiServer}/api/saleTemp/printBillAfterPay`,
+        payload
+      );
+
+      if (res.data.message === "success") {
+        setTimeout(() => {
+          setBillUrl(res.data.fileName);
+        }, 500);
+        openModal();
+      }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-sale"),
+        title: "error",
         text: error.message,
         icon: "error",
       });
@@ -252,7 +283,6 @@ export default function TableDinner() {
             <button
               onClick={() => {
                 printBillBeforePay();
-                openModal();
               }}
             >
               <Badge
@@ -284,11 +314,17 @@ export default function TableDinner() {
             fetchDataSaleTemp={fetchDataSaleTemp}
             setAmount={setAmount}
             amount={amount}
+            tableDinner={tableDinner}
+            printBillAfterPay={printBillAfterPay}
           />
         </div>
       </div>
 
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
+      <Modal
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="max-w-[700px] m-4 modal-print"
+      >
         <div>
           <div className="px-4 py-4 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
@@ -299,6 +335,7 @@ export default function TableDinner() {
             {billUrl && (
               <iframe
                 src={`${config.apiServer}/${billUrl}`}
+                title="Bill"
                 width="100%"
                 height="600px"
               ></iframe>

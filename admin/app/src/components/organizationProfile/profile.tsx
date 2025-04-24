@@ -70,6 +70,7 @@ function Profile() {
         address={address}
         fileSelected={fileSelected} 
         setFileSelected={setFileSelected}
+        fetchDataOrganization={fetchDataOrganization}
       />
 
       <UserInfoCard
@@ -91,6 +92,7 @@ function Profile() {
         setPromtpay={setPromtpay}
         taxCode={taxCode}
         setTaxCode={setTaxCode}
+        fetchDataOrganization={fetchDataOrganization}
       />
     </div>
   );

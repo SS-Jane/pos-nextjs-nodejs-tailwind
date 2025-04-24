@@ -25,16 +25,18 @@ interface TotalPriceProps {
   saleTemps: SaleTemps[];
   fetchDataSaleTemp: () => Promise<void>;
   setAmount: (amount: number) => void;
-  amount?: number;
+  amount: number;
+  tableDinner: number;
+  printBillAfterPay: () => Promise<void>;
 }
-
-
 
 export default function TotalPrice({
   saleTemps,
   fetchDataSaleTemp,
   setAmount,
   amount,
+  tableDinner,
+  printBillAfterPay,
 }: TotalPriceProps) {
   const [saleTempDetails, setSaleTempDetails] = useState<any[]>([]);
   const editModal = useModal();
@@ -44,7 +46,7 @@ export default function TotalPrice({
   const [amountAdded, setAmountAdded] = useState(0);
   const [saleTempId, setSaleTempId] = useState(0);
   const [payType, setPayType] = useState("cash");
-  const [inputMoney, setInputMoney] = useState(0)
+  const [inputMoney, setInputMoney] = useState(0);
 
   useEffect(() => {
     console.log("Sale Temp is", saleTemps);
@@ -305,6 +307,45 @@ export default function TotalPrice({
       fetchDataSaleTempInfo(saleTempId);
     } catch (error: any) {
       Swal.fire({
+        title: "error",
+        text: error.message,
+        icon: "error",
+      });
+    }
+  };
+
+  const endSale = async () => {
+    try {
+      // confirm for end sale
+      const button = await Swal.fire({
+        target: document.querySelector(".modal-sale"),
+        title: "ยืนยันการจบการขาย",
+        text: "คุณต้องการจบการขายใช่หรือไม่",
+        icon: "question",
+        showCancelButton: true,
+        showConfirmButton: true,
+      });
+
+      if (button.isConfirmed) {
+        const payload = {
+          tableNumber: tableDinner,
+          userId: Number(localStorage.getItem("posUserId")),
+          payType: payType,
+          inputMoney: inputMoney,
+          amount: amount + amountAdded,
+          changeMoney: inputMoney - (amount + amountAdded),
+        };
+
+        await axios.post(`${config.apiServer}/api/saleTemp/endSale`, payload);
+
+        await fetchDataSaleTemp();
+
+        saleModal.closeModal();
+        printBillAfterPay();
+      }
+    } catch (error: any) {
+      Swal.fire({
+        target: document.querySelector(".modal-sale"),
         title: "error",
         text: error.message,
         icon: "error",
@@ -580,14 +621,22 @@ export default function TotalPrice({
 
           <div className="w-full flex flex-row items-center justify-center space-x-2 mt-4">
             <div className="w-full">
-              <Button size="md" variant={payType == 'cash' ? 'primary' : 'outline'} className="w-full text-xl"
-              onClick={e => setPayType('cash')}>
+              <Button
+                size="md"
+                variant={payType == "cash" ? "primary" : "outline"}
+                className="w-full text-xl"
+                onClick={(e) => setPayType("cash")}
+              >
                 เงินสด
               </Button>
             </div>
             <div className="w-full">
-              <Button size="md" variant={payType == 'transfer' ? 'primary' : 'outline'} className="w-full text-xl"
-              onClick={e => setPayType('transfer')}>
+              <Button
+                size="md"
+                variant={payType == "transfer" ? "primary" : "outline"}
+                className="w-full text-xl"
+                onClick={(e) => setPayType("transfer")}
+              >
                 เงินโอน
               </Button>
             </div>
@@ -612,7 +661,13 @@ export default function TotalPrice({
           <div className="flex flex-row items-center justify-center w-full space-x-2 mt-4">
             {cash.map((cash) => (
               <div className="w-full" key={cash.id}>
-                <Button size="md" variant={inputMoney == cash.value ? 'primary': 'outline' } className="w-full" value={cash.value} onClick={e => setInputMoney(cash.value)}>
+                <Button
+                  size="md"
+                  variant={inputMoney == cash.value ? "primary" : "outline"}
+                  className="w-full"
+                  value={cash.value}
+                  onClick={(e) => setInputMoney(cash.value)}
+                >
                   {cash.value}
                 </Button>
               </div>
@@ -624,7 +679,7 @@ export default function TotalPrice({
               placeholder="0.00"
               className="w-full text-end rounded-md text-lg h-11 border appearance-none px-4 py-2.5 shadow-theme-xs placeholder:text-gray-400 focus:outline-none focus:ring dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
               value={inputMoney}
-              onChange={e => setInputMoney(Number(e.target.value))}
+              onChange={(e) => setInputMoney(Number(e.target.value))}
             />
           </div>
           <div className="mt-5 font-bold text-gray-800 dark:text-white/90">
@@ -644,7 +699,7 @@ export default function TotalPrice({
                 size="md"
                 variant="primary"
                 className="w-full text-xl font-extrabold"
-                onClick={e => setInputMoney(amount+amountAdded)}
+                onClick={(e) => setInputMoney(amount + amountAdded)}
               >
                 จ่ายพอดี
               </Button>
@@ -654,6 +709,8 @@ export default function TotalPrice({
                 size="md"
                 variant="primary"
                 className="w-full text-xl font-extrabold bg-success-500 hover:bg-success-600"
+                disabled={inputMoney - (amount + amountAdded) < 0}
+                onClick={endSale}
               >
                 จบการขาย
               </Button>

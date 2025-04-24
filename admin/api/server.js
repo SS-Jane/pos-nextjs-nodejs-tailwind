@@ -116,6 +116,9 @@ app.post("/api/saleTemp/printBillBeforePay", (req, res) =>
 app.post("/api/saleTemp/endSale", (req, res) =>
   SaleTempController.endSale(req, res)
 );
+app.post("/api/saleTemp/printBillAfterPay", (req, res) =>
+  SaleTempController.printBillAfterPay(req, res)
+);
 
 // ---Organization taste API---
 app.post("/api/organization/create", (req, res) => {
