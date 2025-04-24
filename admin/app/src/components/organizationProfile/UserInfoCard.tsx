@@ -42,6 +42,7 @@ interface UserInfoCardProps {
     province: string;
     zipCode: string;
   }) => void;
+  fetchDataOrganization: () => Promise<void>;
 }
 
 export default function UserInfoCard({
@@ -61,6 +62,7 @@ export default function UserInfoCard({
   setTaxCode,
   address,
   setAddress,
+  fetchDataOrganization,
 }: UserInfoCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
   const [alert, setAlert] = useState({
@@ -89,7 +91,7 @@ export default function UserInfoCard({
       });
       return false;
     }
-    if (promptpay) {
+    if (!promptpay) {
       setAlert({
         show: true,
         variant: "warning",
@@ -98,6 +100,8 @@ export default function UserInfoCard({
       });
       return false;
     }
+
+    return true;
   };
 
   const handleSave = async () => {
@@ -136,6 +140,8 @@ export default function UserInfoCard({
           timer: 2000,
         });
       }
+      fetchDataOrganization();
+      closeModal();
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-information"),
@@ -145,7 +151,6 @@ export default function UserInfoCard({
         timer: 2000,
       });
     }
-    closeModal();
   };
 
   const clearForm = () => {
@@ -412,7 +417,7 @@ export default function UserInfoCard({
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" type="submit" variant="primary">
                 Save Changes
               </Button>
             </div>

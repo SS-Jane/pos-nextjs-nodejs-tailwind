@@ -551,4 +551,150 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
+  printBillAfterPay: async (req, res) => {
+    try {
+      // organization
+      const organization = await prisma.organization.findFirst();
+      const parseAddress = JSON.parse(organization.address);
+
+      // billSale
+      const billSale = await prisma.billSale.findFirst({
+        where: {
+          userId: req.body.userId,
+          tableNumber: req.body.tableNumber,
+          status: "use",
+        },
+        include: {
+          BillSaleDetails: {
+            include: {
+              Food: true,
+            },
+          },
+          User: true,
+        },
+        orderBy: {
+          id: "desc",
+        },
+      });
+
+      // saleTemps
+      const billSaleDetails = billSale.BillSaleDetails;
+
+      // create bill by pdfkit
+      const pdfkit = require("pdfkit");
+      const fs = require("fs");
+      const dayjs = require("dayjs");
+
+      const paperWidth = 80;
+      const padding = 3;
+
+      const doc = new pdfkit({
+        size: [paperWidth, 200],
+        margins: {
+          top: 3,
+          bottom: 3,
+          left: 3,
+          right: 3,
+        },
+      });
+
+      const fileName = `uploads/bill/bill-${dayjs(new Date()).format(
+        "YYYYMMDDHHmmss"
+      )}.pdf`;
+      const font = `sarabun/Sarabun-Regular.ttf`;
+
+      doc.pipe(fs.createWriteStream(fileName));
+
+      // display logo
+      const imageWidth = 20;
+      const positionX = paperWidth / 2 - imageWidth / 2;
+      doc.image(`uploads/logo/${organization.logo}`, positionX, 5, {
+        align: "center",
+        width: imageWidth,
+        height: 20,
+      });
+      doc.moveDown(1.5);
+      doc.font(font);
+      doc.fontSize(5).text(`*** ใบเสร็จรับเงิน ***`, 20, doc.y + 8);
+      doc.fontSize(8).text(organization.name, padding, doc.y);
+      doc.fontSize(5);
+      doc.text(
+        `${parseAddress.address} ต.${parseAddress.subDistrict} อ.${parseAddress.district} จ.${parseAddress.province} ${parseAddress.zipCode}`
+      );
+      doc.text(`เบอร์โทร: ${organization.phone}`);
+      doc.text(`เลขประจำตัวผู้เสียภาษี: ${organization.taxCode}`);
+      doc.text(`โต๊ะ: ${req.body.tableNumber}`, { align: "center" });
+      doc.text(`วันที่: ${dayjs(new Date()).format("DD/MM/YYYY HH:mm:ss")}`, {
+        align: "center",
+      });
+      doc.moveDown(1.5);
+
+      const y = doc.y;
+      doc.fontSize(4);
+      doc.text("รายการ", padding, y);
+      doc.text("ราคา", padding + 18, y, { align: "right", width: 20 });
+      doc.text("จำนวน", padding + 36, y, { align: "right", width: 20 });
+      doc.text("รวม", padding + 55, y, { align: "right" });
+
+      doc.lineWidth(0.1);
+      doc
+        .moveTo(padding, y + 6)
+        .lineTo(paperWidth - padding, y + 6)
+        .stroke();
+
+      billSaleDetails.map((item, index) => {
+        const y = doc.y;
+        doc.text(item.Food.name, padding, y);
+        doc.text(item.Food.price, padding + 18, y, {
+          align: "right",
+          width: 20,
+        });
+        doc.text(1, padding + 36, y, { align: "right", width: 20 }); //ใช้จำนวนจาก qty ไม่ได้
+        doc.text(item.Food.price * 1, padding + 55, y, {
+          align: "right",
+        }); //ใช้จำนวนจาก qty ไม่ได้
+      });
+
+      let sumAmount = 0;
+      billSaleDetails.forEach((item) => {
+        sumAmount += item.Food.price * 1; //ใช้จำนวนจาก qty ไม่ได้
+      });
+
+      doc.text(
+        `รวม: ${sumAmount.toLocaleString("th-TH")} บาท`,
+        padding,
+        doc.y,
+        {
+          align: "right",
+          width: paperWidth - padding * 2,
+        }
+      );
+
+      doc.text(
+        `รับเงิน ${billSale.inputMoney.toLocaleString("th-TH")} บาท`,
+        padding,
+        doc.y,
+        {
+          align: "right",
+          width: paperWidth - padding * 2,
+        }
+      );
+
+      doc.text(
+        `เงินถอน ${billSale.changeMoney.toLocaleString("th-TH")} บาท`,
+        padding,
+        doc.y,
+        {
+          align: "right",
+          width: paperWidth - padding * 2,
+        }
+      );
+
+      doc.end();
+
+      return res.send({ message: "success", fileName: fileName });
+    } catch (error) {
+      return res.status(500).send({ error: error.message });
+    }
+  },
 };

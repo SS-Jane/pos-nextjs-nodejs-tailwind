@@ -24,6 +24,7 @@ interface UserMetaCardProps {
   setLogo: (logo: string) => void;
   fileSelected?: File | null;
   setFileSelected?: (file: File | null) => void;
+  fetchDataOrganization : () => Promise<void>
 }
 
 export default function UserMetaCard({
@@ -36,6 +37,7 @@ export default function UserMetaCard({
   setLogo,
   fileSelected,
   setFileSelected,
+  fetchDataOrganization,
 }: UserMetaCardProps) {
   const { isOpen, openModal, closeModal } = useModal();
 
@@ -93,6 +95,10 @@ export default function UserMetaCard({
           timer: 2000,
         });
       }
+
+      fetchDataOrganization()
+      closeModal();
+      
     } catch (error: any) {
       Swal.fire({
         target: document.querySelector(".modal-logo"),
