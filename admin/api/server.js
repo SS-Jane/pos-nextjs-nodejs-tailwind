@@ -10,6 +10,7 @@ const SaleTempController = require("./controller/SaleTempController");
 const OrganizationController = require("./controller/OrganizationController");
 const app = express();
 const fileUpload = require("express-fileupload");
+const BillSaleController = require("./controller/BillSaleController");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -129,6 +130,12 @@ app.get("/api/organization/info", (req, res) => {
 });
 app.post("/api/organization/upload", (req, res) =>
   OrganizationController.upload(req, res)
+);
+
+// Bill sale API
+app.post("/api/billSale/list", (req, res) => BillSaleController.list(req, res));
+app.delete("/api/billSale/remove/:id", (req, res) =>
+  BillSaleController.remove(req, res)
 );
 
 app.listen(3001, () => {
