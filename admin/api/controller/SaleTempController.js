@@ -475,6 +475,7 @@ module.exports = {
           SaleTempDetails: {
             include: {
               Food: true,
+              FoodSize : true,
             },
           },
           Food: true,
@@ -509,8 +510,9 @@ module.exports = {
                 billSaleId: billSale.id,
                 foodId: detail.foodId,
                 tasteId: detail.tasteId,
-                moneyAdded: detail.addedMoney,
+                moneyAdded: detail.FoodSize?.moneyAdded,
                 price: detail.Food.price,
+                FoodSizeId: detail.foodSizeId
               });
             }
           } else {
@@ -568,6 +570,7 @@ module.exports = {
           BillSaleDetails: {
             include: {
               Food: true,
+              FoodSize : true,
             },
           },
           User: true,
@@ -644,20 +647,24 @@ module.exports = {
 
       billSaleDetails.map((item, index) => {
         const y = doc.y;
-        doc.text(item.Food.name, padding, y);
+        let name = item.Food.name;
+        if (item.FoodSizeId != null) {
+          name += ` (${item.FoodSize.name} + ${item.FoodSize.moneyAdded})`;
+        }
+        doc.text(name, padding, y);
         doc.text(item.Food.price, padding + 18, y, {
           align: "right",
           width: 20,
         });
         doc.text(1, padding + 36, y, { align: "right", width: 20 }); //ใช้จำนวนจาก qty ไม่ได้
-        doc.text(item.Food.price * 1, padding + 55, y, {
+        doc.text(item.price + item.moneyAdded, padding + 55, y, {
           align: "right",
         }); //ใช้จำนวนจาก qty ไม่ได้
       });
 
       let sumAmount = 0;
       billSaleDetails.forEach((item) => {
-        sumAmount += item.Food.price * 1; //ใช้จำนวนจาก qty ไม่ได้
+        sumAmount += item.price + item.moneyAdded; //ใช้จำนวนจาก qty ไม่ได้
       });
 
       doc.text(

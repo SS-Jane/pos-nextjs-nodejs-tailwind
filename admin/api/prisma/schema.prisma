@@ -14,17 +14,17 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int        @id @default(autoincrement())
   fname     String
   lname     String
-  username  String   @unique
+  username  String     @unique
   password  String
-  email     String   @unique
+  email     String     @unique
   phone     String
-  level     String   @default("admin")
-  status    String   @default("use")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  level     String     @default("admin")
+  status    String     @default("use")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
   BillSales BillSale[]
 }
 
@@ -46,24 +46,26 @@ model FoodCategories {
 }
 
 model FoodSize {
-  id             Int              @id() @default(autoincrement())
-  name           String
-  remark         String?
-  foodCategoryId Int
-  moneyAdded     Int
-  status         String           @default("use")
-  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id],onDelete: Cascade)
-  SaleTempDetail SaleTempDetail[]
+  id              Int              @id() @default(autoincrement())
+  name            String
+  remark          String?
+  foodCategoryId  Int
+  moneyAdded      Int
+  status          String           @default("use")
+  FoodCategories  FoodCategories   @relation(fields: [foodCategoryId], references: [id], onDelete: Cascade)
+  SaleTempDetail  SaleTempDetail[]
+  BillSaleDetails BillSaleDetail[]
 }
 
 model Taste {
-  id             Int              @id() @default(autoincrement())
-  name           String
-  remark         String?
-  foodCategoryId Int
-  status         String           @default("use")
-  FoodCategories FoodCategories   @relation(fields: [foodCategoryId], references: [id],onDelete: Cascade)
-  SaleTempDetail SaleTempDetail[]
+  id              Int              @id() @default(autoincrement())
+  name            String
+  remark          String?
+  foodCategoryId  Int
+  status          String           @default("use")
+  FoodCategories  FoodCategories   @relation(fields: [foodCategoryId], references: [id], onDelete: Cascade)
+  SaleTempDetail  SaleTempDetail[]
+  BillSaleDetails BillSaleDetail[]
 }
 
 model Food {
@@ -75,7 +77,7 @@ model Food {
   price           Int
   foodCategory    String           @default("food") //food, drink
   FoodCategoryId  Int
-  FoodCategories  FoodCategories   @relation(fields: [FoodCategoryId], references: [id],onDelete: Cascade)
+  FoodCategories  FoodCategories   @relation(fields: [FoodCategoryId], references: [id], onDelete: Cascade)
   SaleTempDetails SaleTempDetail[]
   SaleTemps       SaleTemp[]
   BillSaleDetails BillSaleDetail[]
@@ -85,10 +87,10 @@ model SaleTemp {
   id              Int              @id @default(autoincrement())
   userId          Int
   tableNumber     Int
-  foodId          Int              
+  foodId          Int
   qty             Int              @default(1)
-  SaleTempDetails SaleTempDetail[] 
-  Food            Food             @relation(fields: [foodId], references: [id],onDelete: Cascade)
+  SaleTempDetails SaleTempDetail[]
+  Food            Food             @relation(fields: [foodId], references: [id], onDelete: Cascade)
 }
 
 model SaleTempDetail {
@@ -97,47 +99,49 @@ model SaleTempDetail {
   foodId     Int
   tasteId    Int?
   foodSizeId Int?
-  Food       Food      @relation(fields: [foodId], references: [id],onDelete: Cascade)
-  Taste      Taste?    @relation(fields: [tasteId], references: [id],onDelete: SetNull)
-  FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id],onDelete: SetNull)
+  Food       Food      @relation(fields: [foodId], references: [id], onDelete: Cascade)
+  Taste      Taste?    @relation(fields: [tasteId], references: [id], onDelete: SetNull)
+  FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id], onDelete: SetNull)
   SaleTemp   SaleTemp  @relation(fields: [saleTempId], references: [id], onDelete: Cascade)
 }
 
 model Organization {
-  id  Int @id() @default(autoincrement())
-  name String
-  phone String
-  address String
-  email String
-  website String
+  id        Int     @id() @default(autoincrement())
+  name      String
+  phone     String
+  address   String
+  email     String
+  website   String
   promptpay String
-  logo String?
-  taxCode String
+  logo      String?
+  taxCode   String
 }
 
 model BillSale {
-id Int  @id() @default(autoincrement())
-createdDate DateTime  @default(now())
-payDate DateTime @default(now())
-amount Int
-payType String
-userId Int
-inputMoney Int
-changeMoney Int
-tableNumber Int
-status String @default("use")
-User User @relation(fields: [userId], references: [id])
-BillSaleDetails BillSaleDetail[]
+  id              Int              @id() @default(autoincrement())
+  createdDate     DateTime         @default(now())
+  payDate         DateTime         @default(now())
+  amount          Int
+  payType         String
+  userId          Int
+  inputMoney      Int
+  changeMoney     Int
+  tableNumber     Int
+  status          String           @default("use")
+  User            User             @relation(fields: [userId], references: [id])
+  BillSaleDetails BillSaleDetail[]
 }
 
 model BillSaleDetail {
-  id Int @id() @default(autoincrement()) 
+  id         Int       @id() @default(autoincrement())
   billSaleId Int
-  foodId Int
+  foodId     Int
   foodSizeId Int?
-  tasteId Int?
+  tasteId    Int?
   moneyAdded Int?
-  price Int?
-  BillSale BillSale @relation(fields: [billSaleId], references: [id])
-  Food Food @relation(fields: [foodId], references: [id])
+  price      Int?
+  BillSale   BillSale  @relation(fields: [billSaleId], references: [id])
+  Food       Food      @relation(fields: [foodId], references: [id])
+  FoodSize   FoodSize? @relation(fields: [foodSizeId], references: [id])
+  Taste      Taste?    @relation(fields: [tasteId], references: [id])
 }
