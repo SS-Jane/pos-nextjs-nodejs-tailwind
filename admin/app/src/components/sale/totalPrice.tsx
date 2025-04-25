@@ -373,7 +373,10 @@ export default function TotalPrice({
             variant="primary"
             className="w-full font-bold text-xl bg-success-500 hover:bg-success-600"
             startIcon={<CheckLineIcon />}
-            onClick={saleModal.openModal}
+            onClick={() => {
+              setInputMoney(0);
+              saleModal.openModal();
+            }}
           >
             จบการขาย
           </Button>

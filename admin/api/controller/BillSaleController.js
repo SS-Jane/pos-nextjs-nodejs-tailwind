@@ -13,7 +13,13 @@ module.exports = {
           status: "use",
         },
         include: {
-          BillSaleDetails: true,
+          BillSaleDetails: {
+            include : {
+              Food : true,
+              FoodSize : true,
+              Taste : true,
+            }
+          },
           User: true,
         },
         orderBy: {
