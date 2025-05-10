@@ -271,6 +271,12 @@ export default function SaleReportTable() {
               {/* Table Header */}
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
+                <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
+                  >
+                    ลำดับ
+                  </TableCell>
                   <TableCell
                     isHeader
                     className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
@@ -306,18 +312,21 @@ export default function SaleReportTable() {
                       key={index}
                       className="hover:bg-gray-50 dark:hover:bg-white/[0.06]"
                     >
+                      <TableCell className="px-5 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
+                        {index + 1}
+                      </TableCell>
                       <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
                         {billSaleDetail.Food.name}
                       </TableCell>
-                      <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm  dark:text-gray-400 whitespace-nowrap min-w-max">
+                      <TableCell className="px-5 py-3 text-gray-500 text-end text-theme-sm  dark:text-gray-400 whitespace-nowrap min-w-max">
                         {(
                           billSaleDetail.price + billSaleDetail.moneyAdded
                         ).toLocaleString("th-TH")}
                       </TableCell>
-                      <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
+                      <TableCell className="px-5 py-3 text-gray-500 text-end text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
                         {billSaleDetail.Taste?.name}
                       </TableCell>
-                      <TableCell className="px-5 py-3 text-gray-500 text-theme-sm text-end dark:text-gray-400 whitespace-nowrap min-w-max">
+                      <TableCell className="px-5 py-3 text-gray-500 text-theme-sm text-center dark:text-gray-400 whitespace-nowrap min-w-max">
                         {billSaleDetail.foodSizeId &&
                           `${billSaleDetail.FoodSize?.name} + ${billSaleDetail.moneyAdded}`}
                       </TableCell>
