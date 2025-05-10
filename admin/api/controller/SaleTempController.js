@@ -512,7 +512,7 @@ module.exports = {
                 tasteId: detail.tasteId,
                 moneyAdded: detail.FoodSize?.moneyAdded,
                 price: detail.Food.price,
-                FoodSizeId: detail.foodSizeId
+                foodSizeId: detail.foodSizeId
               });
             }
           } else {

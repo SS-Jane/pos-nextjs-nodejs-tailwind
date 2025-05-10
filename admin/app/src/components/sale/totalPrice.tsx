@@ -93,15 +93,6 @@ export default function TotalPrice({
     }
   };
 
-  const sumAmount = (saleTemps: any) => {
-    let total = 0;
-    saleTemps.forEach((item: any) => {
-      total += item.Food.price * item.qty;
-    });
-
-    return setAmount(total);
-  };
-
   const handleEdit = async (item: any) => {
     try {
       setSaleTempId(item.id);
@@ -262,15 +253,29 @@ export default function TotalPrice({
     }
   };
 
-  const sumMoneyAdded = (saleTempDetails: any) => {
+  const sumMoneyAdded = (SaleTempDetails: any) => {
     let sum = 0;
+    console.log("Sale Temp Details", SaleTempDetails);
 
-    saleTempDetails.forEach((detail: any) => {
-      console.log(detail.FoodSize?.moneyAdded);
-      sum += detail.FoodSize?.moneyAdded ?? 0;
+    if (SaleTempDetails === undefined || SaleTempDetails.length === 0) {
+      sum = 0;
+    } else if (SaleTempDetails.length > 0) {
+      SaleTempDetails.forEach((detail: any) => {
+        sum += detail.FoodSize?.moneyAdded ?? 0;
+      });
+    }
+    setAmountAdded(sum);
+    return sum;
+    
+  };
+
+  const sumAmount = (saleTemps: any) => {
+    let total = 0;
+    saleTemps.forEach((item: any) => {
+      total += item.Food.price * item.qty;
     });
 
-    setAmountAdded(sum);
+    return setAmount(total);
   };
 
   const createSaleTempDetail = async () => {
@@ -398,8 +403,10 @@ export default function TotalPrice({
                   {item.Food.name}
                 </h5>
                 <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  {item.Food.price} x {item.qty} + {amountAdded} = ฿
-                  <CalculateTotalPrice item={item} />
+                  {item.Food.price} x {item.qty} + {" "} 
+                  {sumMoneyAdded(item.SaleTempDetails)} = ฿{" "} 
+                  {item.Food.price * item.qty +
+                    sumMoneyAdded(item.SaleTempDetails)}
                 </p>
               </div>
 
