@@ -210,18 +210,22 @@ export default function SaleReportTable() {
                       <Button
                         size="sm"
                         variant="primary"
-                        onClick={() =>
-                          setBillSaleDetails(billSale.billSaleDetails)
-                        }
+                        onClick={() => {
+                          console.log(
+                            "Bill Sale Details",
+                            billSale.BillSaleDetails
+                          );
+                          setBillSaleDetails(billSale.BillSaleDetails);
+                          
+                          detailModal.openModal();
+                        }}
                         startIcon={<ListIcon className="h-5 w-5" />}
                       >
                         รายละเอียด
                       </Button>
                     </TableCell>
                     <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
-                      {dayjs(billSale.createdDate).format(
-                        "YYYY-MM-DD HH:mm:ss"
-                      )}
+                      {dayjs(billSale.payDate).format("YYYY-MM-DD HH:mm:ss")}
                     </TableCell>
                     <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm  dark:text-gray-400 whitespace-nowrap min-w-max">
                       {billSale.id}
@@ -252,6 +256,78 @@ export default function SaleReportTable() {
           </Table>
         </div>
       </div>
+      <Modal
+        isOpen={detailModal.isOpen}
+        onClose={detailModal.closeModal}
+        className="modal-detail max-w-[600px] p-5 lg:p-10"
+      >
+        <h4 className="font-semibold text-gray-800 mb-7 text-title-sm dark:text-white/90">
+          รายละเอียดบิล
+        </h4>
+
+        <div className="max-w-full overflow-x-auto">
+          <div className="w-full">
+            <Table>
+              {/* Table Header */}
+              <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+                <TableRow>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-center text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
+                  >
+                    รายการ
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
+                  >
+                    ราคา
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
+                  >
+                    รสชาติ
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400 whitespace-nowrap min-w-max"
+                  >
+                    ขนาด
+                  </TableCell>
+                </TableRow>
+              </TableHeader>
+
+              {/* Table Body */}
+              <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
+                {billSaleDetails.length > 0 &&
+                  billSaleDetails.map((billSaleDetail: any, index: number) => (
+                    <TableRow
+                      key={index}
+                      className="hover:bg-gray-50 dark:hover:bg-white/[0.06]"
+                    >
+                      <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
+                        {billSaleDetail.Food.name}
+                      </TableCell>
+                      <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm  dark:text-gray-400 whitespace-nowrap min-w-max">
+                        {(
+                          billSaleDetail.price + billSaleDetail.moneyAdded
+                        ).toLocaleString("th-TH")}
+                      </TableCell>
+                      <TableCell className="px-5 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400 whitespace-nowrap min-w-max">
+                        {billSaleDetail.Taste?.name}
+                      </TableCell>
+                      <TableCell className="px-5 py-3 text-gray-500 text-theme-sm text-end dark:text-gray-400 whitespace-nowrap min-w-max">
+                        {billSaleDetail.foodSizeId &&
+                          `${billSaleDetail.FoodSize?.name} + ${billSaleDetail.moneyAdded}`}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
