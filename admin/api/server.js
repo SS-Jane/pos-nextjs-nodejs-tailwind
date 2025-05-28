@@ -143,6 +143,7 @@ app.delete("/api/billSale/remove/:id", (req, res) =>
 app.post("/api/report/sumPerDayInYearAndMonth", (req, res) =>
   ReportController.sumPerDayInYearAndMonth(req, res)
 );
+app.post('/api/report/sumPerMonthInYear', (req,res) => ReportController.sumPerMonthInYear(req,res))
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");

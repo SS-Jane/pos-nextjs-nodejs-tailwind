@@ -1,10 +1,19 @@
 "use client";
+
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
+import dayjs from "dayjs";
+import Swal from "sweetalert2";
+import axios from "axios";
+import config from "@/config";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import Select from "../form/Select";
+import { it } from "node:test";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -12,6 +21,46 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlySalesChart() {
+  const [data, setData] = useState([]);
+  const [totalAmount , setTotalAmount] = useState(0);
+  const [arrYear, setArrYear] = useState<number[]>([]);
+  const [selectYear, setSelectYear] = useState(dayjs().year());
+
+  useEffect(()=>{
+    setArrYear(Array.from({ length : 10}, (_, i) => dayjs().year() - i));
+    fetchDataSumPerMonthInYear();
+  },[])
+
+  const fetchDataSumPerMonthInYear = async () => {
+    try {
+      const payload = {
+        year : selectYear
+      }
+
+      const res = await axios.post(`${config.apiServer}/api/report/sumPerMonthInYear`, payload);
+      console.log("SumMonthInYear",res.data.results);
+      setData(res.data.results);
+      setTotalAmount(sumTotalAmount(res.data.results));
+
+    } catch (error : any) {
+      Swal.fire({
+        title : 'Error',
+        text : `ไม่สามารถดึงข้องมูล SumPerMonthInYear : ${error.message}`,
+        icon : 'error'
+      })
+    }
+  }
+
+  const sumTotalAmount = (data : any[]) => {
+    let sum = 0;
+
+    data.forEach((item : any)=>{
+      sum += item.amount;
+    })
+
+    return sum;
+  }
+
   const options: ApexOptions = {
     colors: ["#465fff"],
     chart: {
@@ -94,7 +143,7 @@ export default function MonthlySalesChart() {
   const series = [
     {
       name: "Sales",
-      data: [168, 385, 201, 298, 187, 195, 291, 110, 215, 390, 280, 112],
+      data: data.map((item : any)=> item.amount.toFixed(2).toLocaleString('th-TH')),
     },
   ];
   const [isOpen, setIsOpen] = useState(false);
@@ -136,6 +185,38 @@ export default function MonthlySalesChart() {
               Delete
             </DropdownItem>
           </Dropdown>
+        </div>
+      </div>
+
+      <div className="flex flex-row items-center space-x-2 my-2">
+        <div>
+          <p className="my-2 text-gray-500 text-theme-sm dark:text-gray-400">
+            ปี
+          </p>
+          <Select
+            defaultValue={selectYear.toString()}
+            options={arrYear.map((year : number)=>{
+              return {
+                label : year.toString(),
+                value : year.toString()
+              }
+            })}
+            placeholder="Select Option"
+            onChange={(value) => setSelectYear(parseInt(value))}
+            className="dark:bg-dark-900"
+
+          />
+        </div>
+        <div>
+          <p className="my-2 text-gray-500 text-theme-sm dark:text-gray-400">
+            &nbsp;
+          </p>
+          <button
+            className="inline-flex items-center justify-center font-medium gap-2 rounded-lg transition px-3 py-2.5 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300"
+            onClick={fetchDataSumPerMonthInYear}
+          >
+            <FontAwesomeIcon icon={faMagnifyingGlass} /> แสดงรายการ
+          </button>
         </div>
       </div>
 
