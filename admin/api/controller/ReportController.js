@@ -49,4 +49,48 @@ module.exports = {
       return res.status(500).send({ error: error.message });
     }
   },
+  sumPerMonthInYear : async (req,res) => {
+    try {
+      const year = req.body.year;
+      const sumPerMonth = [];
+
+      // Loop months from 1 to 12
+      for (let month = 1; month <= 12 ; month++){
+        const startDate = dayjs(year + '-'+ month +'-01');
+        const endDate = startDate.endOf('month');
+
+        // Find all billSale in month
+        const billSales = await prisma.billSale.findMany({
+          where : {
+            createdDate : {
+              gte : new Date(startDate.format('YYYY-MM-DD')),
+              lte : new Date(endDate.format('YYYY-MM-DD'))
+            },
+            status : "use"
+          },
+          include : {
+            BillSaleDetails : true
+          }
+        })
+
+        // Sum price in billSaleDetails
+        let sum = 0;
+        for (let i = 0 ; i < billSales.length ; i++){
+          const billSaleDetails = billSales[i].BillSaleDetails;
+
+          for (let j = 0; j < billSaleDetails.length; j++){
+            sum += billSaleDetails[j].price 
+          }
+        }
+
+        sumPerMonth.push({
+          month : startDate.format('MM'),
+          amount : sum
+        })
+      }
+      return res.send({ results : sumPerMonth})
+    } catch (error) {
+      return res.status(500).send({ error : error.message});
+    }
+  }
 };
