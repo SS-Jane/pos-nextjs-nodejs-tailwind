@@ -21,6 +21,12 @@ app.use("/uploads", express.static("uploads"));
 // ---User API---
 app.post("/api/user/signIn", (req, res) => UserController.signIn(req, res));
 app.post("/api/user/signUp", (req, res) => UserController.signUp(req, res));
+app.get("/api/user/list", (req, res) => UserController.list(req, res));
+app.post("/api/user/create", (req, res) => UserController.create(req, res));
+app.put("/api/user/update", (req, res) => UserController.update(req, res));
+app.delete("/api/user/remove/:id", (req, res) =>
+  UserController.remove(req, res)
+);
 
 // ---Food categories API---
 app.post("/api/foodCategories/create", (req, res) =>
@@ -143,7 +149,9 @@ app.delete("/api/billSale/remove/:id", (req, res) =>
 app.post("/api/report/sumPerDayInYearAndMonth", (req, res) =>
   ReportController.sumPerDayInYearAndMonth(req, res)
 );
-app.post('/api/report/sumPerMonthInYear', (req,res) => ReportController.sumPerMonthInYear(req,res))
+app.post("/api/report/sumPerMonthInYear", (req, res) =>
+  ReportController.sumPerMonthInYear(req, res)
+);
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
