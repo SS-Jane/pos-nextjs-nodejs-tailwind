@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import CalculateTotalPrice from "./CalculateTotalPrice";
 
 interface TotalPriceProps {
   saleTemps: SaleTemps[];
@@ -29,6 +28,16 @@ interface TotalPriceProps {
   tableDinner: number;
   printBillAfterPay: () => Promise<void>;
 }
+
+const calculateAddedMoneyForItem = (details: any[]): number => {
+  if (!details || !Array.isArray(details) || details.length === 0) {
+    return 0;
+  }
+  return details.reduce(
+    (sum, details) => sum + (details.FoodSize?.moneyAdded ?? 0),
+    0
+  );
+};
 
 export default function TotalPrice({
   saleTemps,
@@ -50,8 +59,20 @@ export default function TotalPrice({
 
   useEffect(() => {
     console.log("Sale Temp is", saleTemps);
-    sumAmount(saleTemps);
-  }, [saleTemps]);
+
+    let currentTotalBaseAmount = 0;
+    let currentTotalAddedMoney = 0;
+
+    saleTemps.forEach((item: any) => {
+      currentTotalBaseAmount += (item.Food?.price || 0) * (item.qty || 0);
+      currentTotalAddedMoney += calculateAddedMoneyForItem(
+        item.SaleTempDetails
+      );
+    });
+
+    setAmount(currentTotalBaseAmount);
+    setAmountAdded(currentTotalAddedMoney);
+  }, [saleTemps, setAmount, setAmountAdded]);
 
   const removeSaleTemp = async (id: number) => {
     try {
@@ -93,15 +114,6 @@ export default function TotalPrice({
     }
   };
 
-  const sumAmount = (saleTemps: any) => {
-    let total = 0;
-    saleTemps.forEach((item: any) => {
-      total += item.Food.price * item.qty;
-    });
-
-    return setAmount(total);
-  };
-
   const handleEdit = async (item: any) => {
     try {
       setSaleTempId(item.id);
@@ -117,10 +129,10 @@ export default function TotalPrice({
     }
   };
 
-  const generateSaleTempDetail = async (saleTempId: number) => {
+  const generateSaleTempDetail = async (saleTempIdParam: number) => {
     try {
       const payload = {
-        saleTempId: saleTempId,
+        saleTempId: saleTempIdParam,
       };
 
       await axios.post(
@@ -128,7 +140,7 @@ export default function TotalPrice({
         payload
       );
       await fetchDataSaleTemp();
-      fetchDataSaleTempInfo(saleTempId);
+      fetchDataSaleTempInfo(saleTempIdParam);
     } catch (error: any) {
       Swal.fire({
         title: "Error",
@@ -138,10 +150,10 @@ export default function TotalPrice({
     }
   };
 
-  const fetchDataSaleTempInfo = async (saleTempId: number) => {
+  const fetchDataSaleTempInfo = async (saleTempIdParam: number) => {
     try {
       const res = await axios.get(
-        `${config.apiServer}/api/saleTemp/info/${saleTempId}`
+        `${config.apiServer}/api/saleTemp/info/${saleTempIdParam}`
       );
 
       const data = res.data.results;
@@ -150,14 +162,10 @@ export default function TotalPrice({
         setSaleTempDetails(data.SaleTempDetails || []);
         setTastes(data.Food?.FoodCategories?.Tastes || []);
         setSizes(data.Food?.FoodCategories?.FoodSizes || []);
-        sumAmount(data.SaleTempDetails);
-        sumMoneyAdded(data.SaleTempDetails);
       } else {
         setSaleTempDetails([]);
         setTastes([]);
         setSizes([]);
-        setAmount(0);
-        setAmountAdded(0);
       }
     } catch (error: any) {
       Swal.fire({
@@ -262,17 +270,6 @@ export default function TotalPrice({
     }
   };
 
-  const sumMoneyAdded = (saleTempDetails: any) => {
-    let sum = 0;
-
-    saleTempDetails.forEach((detail: any) => {
-      console.log(detail.FoodSize?.moneyAdded);
-      sum += detail.FoodSize?.moneyAdded ?? 0;
-    });
-
-    setAmountAdded(sum);
-  };
-
   const createSaleTempDetail = async () => {
     try {
       const payload = {
@@ -294,10 +291,10 @@ export default function TotalPrice({
     }
   };
 
-  const removeSaleTempDetail = async (saleTempDetailId: number) => {
+  const removeSaleTempDetail = async (saleTempDetailIdParam: number) => {
     try {
       const payload = {
-        saleTempDetailId: saleTempDetailId,
+        saleTempDetailId: saleTempDetailIdParam,
       };
       await axios.delete(
         `${config.apiServer}/api/saleTemp/removeSaleTempDetail`,
@@ -367,7 +364,7 @@ export default function TotalPrice({
         ฿{(amount + amountAdded).toLocaleString("th-TH")}
       </div>
       <div>
-        {amount > 0 ? (
+        {amount + amountAdded > 0 ? (
           <Button
             size="md"
             variant="primary"
@@ -388,67 +385,84 @@ export default function TotalPrice({
         {saleTemps.length === 0 ? (
           <p className="text-gray-500 text-center">No items added.</p>
         ) : (
-          saleTemps.map((item: any) => (
-            <div
-              className="flex flex-col border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] p-4 rounded-lg shadow-sm space-y-3"
-              key={item.id}
-            >
-              <div>
-                <h5 className="text-lg font-semibold text-gray-800   text-start dark:text-gray-200">
-                  {item.Food.name}
-                </h5>
-                <p className="text-gray-700 dark:text-gray-300 text-sm">
-                  {item.Food.price} x {item.qty} + {amountAdded} = ฿
-                  <CalculateTotalPrice item={item} />
-                </p>
-              </div>
+          saleTemps.map((item: any) => {
+            const itemSpecificAddedMoney = calculateAddedMoneyForItem(
+              item.SaleTempDetails
+            );
+            const itemBaseTotal = (item.Food?.price || 0) * (item.qty || 0);
+            const itemGrandTotal = itemBaseTotal + itemSpecificAddedMoney;
+            return (
+              <div
+                className="flex flex-col border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] p-4 rounded-lg shadow-sm space-y-3"
+                key={item.id}
+              >
+                <div>
+                  <h5 className="text-lg font-semibold text-gray-800   text-start dark:text-gray-200">
+                    {item.Food.name}
+                  </h5>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm">
+                    {item.Food.price} x {item.qty}
+                    {itemSpecificAddedMoney > 0
+                      ? `+ ${itemSpecificAddedMoney.toLocaleString("th-TH")}`
+                      : ""}{" "}
+                    = ฿ {itemGrandTotal.toLocaleString("th-TH")}
+                  </p>
+                </div>
 
-              <div className="flex items-center justify-between space-x-2">
-                <Button
-                  size="sm"
-                  onClick={() => updateQty(item.id, item.qty - 1)}
-                  disabled={item.qty === 0 && item.saleTempDetails?.length > 0}
-                >
-                  <FontAwesomeIcon icon={faMinus} />
-                </Button>
-                <Input
-                  value={item.qty}
-                  disabled
-                  className="text-center w-10 bg-gray-200 rounded-md"
-                />
-                <Button
-                  size="sm"
-                  onClick={() => updateQty(item.id, item.qty + 1)}
-                  disabled={item.saleTempDetails?.length > 0}
-                >
-                  <FontAwesomeIcon icon={faPlus} />
-                </Button>
-              </div>
+                <div className="flex items-center justify-between space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => updateQty(item.id, item.qty - 1)}
+                    disabled={
+                      (item.qty === 1 && item.SaleTempDetails?.length > 0) ||
+                      item.qty === 0
+                    }
+                  >
+                    <FontAwesomeIcon icon={faMinus} />
+                  </Button>
+                  <Input
+                    value={item.qty}
+                    disabled
+                    className="text-center w-10 bg-gray-200 rounded-md"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => updateQty(item.id, item.qty + 1)}
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                  </Button>
+                </div>
 
-              <div className="flex justify-between mt-2">
-                <button
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
-                  onClick={(e) => removeSaleTemp(item.id)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-                  onClick={() => {
-                    handleEdit(item);
-                  }}
-                >
-                  Edit
-                </button>
+                <div className="flex justify-between mt-2">
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition"
+                    onClick={(e) => removeSaleTemp(item.id)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
+                    onClick={() => {
+                      setSaleTempId(item.id);
+                      handleEdit(item);
+                    }}
+                  >
+                    Edit
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
+      {/* Edit Modal */}
       <Modal
         isOpen={editModal.isOpen}
-        onClose={editModal.closeModal}
+        onClose={() => {
+          fetchDataSaleTemp();
+          editModal.closeModal();
+        }}
         isFullscreen={true}
         className="modal-edit-food"
       >
@@ -465,7 +479,9 @@ export default function TotalPrice({
                 size="md"
                 variant="primary"
                 startIcon={<PlusIcon />}
-                onClick={createSaleTempDetail}
+                onClick={async () => {
+                  await createSaleTempDetail();
+                }}
               >
                 Add food list
               </Button>
@@ -519,10 +535,13 @@ export default function TotalPrice({
                           </button>
                         </TableCell>
                         <TableCell className="px-6 py-4 sm:px-7 text-start font-medium text-gray-800 text-theme-sm dark:text-white/90">
-                          {detail.Food?.name || "-"}
+                          {detail.Food?.name ||
+                            saleTemps.find((st) => st.id === saleTempId)?.Foods
+                              .name ||
+                            "-"}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {tastes.length > 0
+                          {Array.isArray(tastes) && tastes.length > 0
                             ? tastes.map((taste: any) =>
                                 detail.tasteId === taste.id ? (
                                   <button
@@ -557,7 +576,7 @@ export default function TotalPrice({
                         </TableCell>
 
                         <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                          {sizes.length > 0
+                          {Array.isArray(sizes) && sizes.length > 0
                             ? sizes.map((size: any) =>
                                 detail.foodSizeId === size.id ? (
                                   <button

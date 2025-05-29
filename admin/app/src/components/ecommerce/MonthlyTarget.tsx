@@ -13,6 +13,10 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function MonthlyTarget() {
+  const [target, setTarget] = useState<number>(0);
+  const [revernue, setRevernue] = useState<number>(0);
+  const [daily, setDaily] = useState<number>(0);
+
   const series = [75.55];
   const options: ApexOptions = {
     colors: ["#465FFF"],

@@ -176,8 +176,6 @@ export default function TableDinner() {
         setTimeout(() => {
           setBillUrl(res.data.fileName);
         }, 500);
-        console.log("Bill url", billUrl);
-        console.log("File name", res.data.fileName);
         openModal();
       }
     } catch (error: any) {

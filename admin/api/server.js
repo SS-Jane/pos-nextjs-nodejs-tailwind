@@ -11,6 +11,7 @@ const OrganizationController = require("./controller/OrganizationController");
 const app = express();
 const fileUpload = require("express-fileupload");
 const BillSaleController = require("./controller/BillSaleController");
+const ReportController = require("./controller/ReportController");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -137,6 +138,12 @@ app.post("/api/billSale/list", (req, res) => BillSaleController.list(req, res));
 app.delete("/api/billSale/remove/:id", (req, res) =>
   BillSaleController.remove(req, res)
 );
+
+// Report API
+app.post("/api/report/sumPerDayInYearAndMonth", (req, res) =>
+  ReportController.sumPerDayInYearAndMonth(req, res)
+);
+app.post('/api/report/sumPerMonthInYear', (req,res) => ReportController.sumPerMonthInYear(req,res))
 
 app.listen(3001, () => {
   console.log("Listen at localhost port 3001");
